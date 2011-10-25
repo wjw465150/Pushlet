@@ -1,0 +1,61 @@
+
+	BODY, .MAIN, .SMALL, TD, P
+	{
+	     background: #ffffff;
+	     color: #000066;
+	     font-size: 12px;
+	     font-family : verdana, sans-serif;
+	}
+
+	BODY {
+	    margin-left: 5%;
+	    margin-right: 24%;
+	}
+
+	.SMALL
+	{
+	     font-size: 10px;
+	     font-style : italic;
+	     font-family : Georgia, "Times New Roman", serif;
+	}
+
+	H1, H2, H3, H4, .TITLE
+	{
+	     color: #990033;
+	}
+
+	.TITLE
+	{
+	     margin-top: 40px;
+	     font-size: 24px;
+	     margin-bottom: 20px;
+	}
+
+	H1
+	{
+	     font-size: 16px;
+	}
+
+	H2
+	{
+	     font-size: 14px;
+	}
+
+	H3
+	{
+	     font-size: 12px;
+	}
+
+	H4
+	{
+	     font-size: 11px;
+	}
+
+	.LISTING
+	{
+	    background-color: #F0F0F0;
+	    color: #000000;
+	    font-size: 11px;
+		font-family : "Courier New", Courier, monospaced;
+	}
+

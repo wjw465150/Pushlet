@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+	<head>
+		<!--
+		Proof of concept for Ajax technology.
+		Should work in IW, Safari, Mozilla's and Opera 8+.
+		$Id: ajax-2.html,v 1.2 2006/05/15 11:52:53 justb Exp $
+	   -->
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<title>Ajax Demo</title>
+
+		
+		<script type="text/javascript" src="js/ajax-pushlet-client.js"></script>
+		
+		<script type="text/javascript"><!--
+
+	PL.setDebug(true);
+	
+	// Pushlet Event Callback from Server
+	function onEvent(event) {
+		if(event.getSubject()=='/user/login'){
+		  document.disp.event2.value = event.get('p_time');
+		  document.disp.event3.value = event.toString();
+		}
+		pr(event.toString());
+	}
+
+	function joinListen() {
+		pr('joinListen...');
+		PL.joinListen('/pushlet/ping,/user/login');
+	}
+
+	function leave() {
+		pr('leaving...');
+		PL.leave();
+	}
+	
+	function publish(){
+	   PL.publish('/user/login','name=test');
+	}
+	// Print util
+	function pr(aString) {
+		document.disp.event.value = aString;
+	}
+
+	//-->
+	</script>
+
+	</head>
+
+	<body onload="PL._init();">
+		<div>
+			<h3>
+				Pushlet Protocol using XMLHttpRequest
+			</h3>
+
+			<p>
+				This example exercises the possible use of
+				<a href="http://www.xml.com/pub/a/2005/02/09/xml-http-request.html">XMLHttpRequest</a>.
+				Press [start] to stream events. Below are the raw events coming from
+				the server.
+			</p>
+
+			<p>
+				<a href="#" onclick="joinListen();return false;">[Start]</a> -
+				<a href="#" onclick="leave();return false;">[Stop]</a>
+				<a href="#" onclick="publish();return false;">[publish]</a>
+			</p>
+
+			<form name="disp">
+				<table border="2" bordercolor="white" cellpadding="4"
+					cellspacing="0">
+					<tr>
+						<td>
+							<textarea cols="60" rows="16" name="event">
+					NO DATA (idle)
+				</textarea>
+						</td>
+						<td>
+							<textarea cols="60" rows="16" name="event3">
+                    NO DATA (idle)
+                </textarea>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<textarea cols="60" rows="16" name="event2">
+                    NO DATA (idle)
+                </textarea>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<div id='mainUI' style="float: right"></div>
+	</body>
+</html>

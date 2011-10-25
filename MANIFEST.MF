@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.7.1
+Created-By: 14.3-b01-101 (Apple Inc.)
+Built-By: just
+
+Name: nl/justobjects/pushlet/
+Specification-Version: 2.0.4
+Implementation-Title: Pushlets
+Implementation-Version: 20100205-1406
+Implementation-Vendor: www.justobjects.nl
+

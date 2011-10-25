@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>web IM 0.2</title>
+
+		<meta http-equiv="content-type" content="text/html;charset=UTF-8">
+		<meta http-equiv="pragma" content="no-cache">
+		<meta http-equiv="cache-control" content="no-cache">
+		<meta http-equiv="expires" content="0">
+		<link rel="stylesheet" type="text/css"
+			href="ext/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="desktop/css/desktop.css" />
+		<!-- GC -->
+		<!-- LIBS -->
+		<script type="text/javascript" src="ext/adapter/ext/ext-base.js"></script>
+		<!-- ENDLIBS -->
+
+		<script type="text/javascript" src="ext/ext-all-debug.js"></script>
+
+		<!-- DESKTOP -->
+		<script type="text/javascript" src="js/ajax-pushlet-client.js"></script>
+		<script type="text/javascript" src="js/IMui.js"></script>
+		<script type="text/javascript">
+	//非debug模式
+    PL.setDebug(false);
+    
+    //在线用户  里面装的就是树节点（的引用）
+    onlines = new Array();
+    
+    // Pushlet Event Callback from Server
+    function onEvent(event) {
+        //如果是登陆的消息 并且不是自己发出的 并且 树中没有这个id的节点
+        if (event.getSubject() == '/user/login'
+                && PL.sessionId != event.get('p_from')
+                && Ext.getCmp('im-tree').getNodeById(event.get('p_from')) == null) {
+            //就添加节点
+            var node4add=new Ext.tree.TreeNode({
+                        id : event.get('p_from'),
+                        text : event.get('name'),
+                        iconCls : 'user',
+                        leaf : true
+                    });
+            //给节点添加一个时间戳属性，以后用来判断是否在线  这个属性会不断刷新  长时间不刷新就说明掉了
+            node4add.aliveTS=event.get('p_time');
+            Ext.getCmp('im-tree').root.appendChild(node4add);
+            //添加到在线数组中
+            onlines.push(node4add);
+        }else if(event.getSubject() == '/user/login' && PL.sessionId != event.get('p_from')
+                && Ext.getCmp('im-tree').getNodeById(event.get('p_from')) != null ){
+                //如果是登陆的消息 并且不是自己发出的 并且 树中有这个id的节点  就更新他的在线时间戳
+                Ext.getCmp('im-tree').getNodeById(event.get('p_from')).aliveTS=event.get('p_time');
+        }
+        //如果是聊天的信息   
+        if (event.getSubject() == '/user/chat') {
+            var node = Ext.getCmp('im-tree').getNodeById(event.get('p_from'));
+            //打开聊天窗口
+            showChatWindow(node);
+            var now = new Date();
+            var time = " " + now.getHours()
+                                    + ":" + now.getMinutes() + ":"
+                                    + now.getSeconds() + "";
+            //解码回车符  消息在发送的时候对回车符进行了替换 现在替换回来 否则在经过服务器的时候回车符会丢失
+            var smessage = event.get('message');
+            var reg = new RegExp(PL.sessionId, "g"); // 创建正则RegExp对象
+            smessage = smessage.replace(reg, '\n');
+            //把新消息添加到历史信息栏
+            Ext.get('cw_hw_' + node.id).dom.value += node.text
+                    + '  ' + time + '   \n' + smessage + '\n\n';
+
+        }
+    }
+
+    //与服务器建立连接 建立session  并监听事件
+    //   /pushlet/ping  是为了与服务器保持心跳  知道服务器没死
+    //   /user/login  登陆信息  /user/login  聊天信息
+    function joinListen() {
+        PL.joinListen('/pushlet/ping,/user/login,/user/chat');
+    }
+   
+   //借助一定周期的RefreshAck事件  发送我的在线信息  
+   //是为了提供给刚上线的user 并监控在线用户的时间戳是否较新  否则判断为掉线 踢掉
+   //Refresh是为了让服务器知道client没死
+   function onRefreshAck(event){
+        for(var i=0;i<onlines.length;i++){
+            //当前时间戳-上次更新的时间戳 如果间隔较大 说明没更新  掉了
+            if((event.get('p_time')- onlines[i].aliveTS)>15){
+                var t=new Ext.ToolTip({
+			        target: 'mainUI',
+			        dismissDelay: 15000 ,
+			        html: onlines[i].text+'离开了'
+			    });
+			    t.showAt([50,80]);
+                onlines[i].remove();//从树上移除
+                onlines.remove(onlines[i]);//从在线用户移除
+            }
+        }
+        publish();
+   }
+   //发布上线信息
+    function publish() {
+        PL.publish('/user/login', 'name='+username);
+    }
+   //上线后马上发布我的上线信息
+   function onJoinListenAck(event){
+	    publish();
+   }
+   //打开聊天窗口
+   function showChatWindow(node) {
+        var chatwindow=Ext.getCmp('cw_' + node.id);
+        if ( chatwindow== null) {
+            chatwindow = new Ext.Window({
+                id : 'cw_' + node.id,
+                title : node.text,
+                width : 400,
+                Height : 300,
+                bodyStyle : 'padding:5px;',
+                draggable : true,
+                closable : true,
+                closeAction : 'hide',
+                plain : false,
+                modal : false,
+                resizable : true,
+                x:400+onlines.indexOf(node)*30,
+                y:100,
+                items : [{
+                    xtype : "form",
+                    frame : true,
+                    bodyStyle : 'padding:0px 0px 0',
+                    buttonAlign : 'center',
+                    keys : [{
+                        key : 13,
+                        ctrl: true,
+                        fn : function() {
+                        //得到要发送的信息
+                        var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
+                        //替换回车符
+                        smessage=smessage.replace(/\r\n/ig,node.id);
+                            PL.publish('/user/chat','p_to='+ node.id+ '&message='+ smessage);
+                            //得到当前时间
+                            var now = new Date()
+                            var time = " " + now.getHours()
+                                    + ":" + now.getMinutes() + ":"
+                                    + now.getSeconds() + "";
+                            //修改聊天历史框
+                            Ext.get('cw_hw_' + node.id).dom.value += username + '  ' + time + ' \n'
+                                    + Ext.get('cw_iw_' + node.id).dom.value
+                                    + '\n\n';
+                            //清空输入框
+                            Ext.get('cw_iw_' + node.id).dom.value='';
+                        }
+                    }],
+                    items : [{
+                                xtype : "fieldset",
+                                title : '消息框',
+                                autoHeight : true,
+                                hideBorders : true,
+                                items : [{
+                                            id : 'cw_hw_' + node.id,
+                                            hideLabel : true,
+                                            xtype : "textarea",
+                                            readOnly : true,
+                                            name : "textarea",
+                                            height : 200,
+                                            anchor : '100%'
+                                        }]
+                            }, {
+                                xtype : "fieldset",
+                                hideBorders : true,
+                                title : '输入框',
+                                autoHeight : true,
+                                items : [{
+                                            id : 'cw_iw_' + node.id,
+                                            hideLabel : true,
+                                            xtype : "textarea",
+                                            name : "textarea",
+                                            height : 100,
+                                            anchor : '100%'
+                                        }]
+                            }]
+                }],
+                buttons : [{
+                    xtype : "button",
+                    text : "Ok",
+                    handler : function() {
+                        //得到要发送的信息
+                        var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
+                        //替换回车符
+                        smessage=smessage.replace(/\r\n/ig,node.id);
+                            PL.publish('/user/chat','p_to='+ node.id+ '&message='+ smessage);
+                            //得到当前时间
+                            var now = new Date()
+                            var time = " " + now.getHours()
+                                    + ":" + now.getMinutes() + ":"
+                                    + now.getSeconds() + "";
+                            //修改聊天历史框
+                            Ext.get('cw_hw_' + node.id).dom.value += username + '  ' + time + '  \n'
+                                    + Ext.get('cw_iw_' + node.id).dom.value
+                                    + '\n\n';
+                            //清空输入框
+                            Ext.get('cw_iw_' + node.id).dom.value='';
+                    }
+                }]
+
+            });
+            Ext.getCmp( 'cw_iw_' + node.id).focus();
+        }
+        chatwindow.show();
+    }
+    
+		</script>
+	</head>
+
+	<body onload="PL._init();">
+		<div id='mainUI'></div>
+	</body>
+</html>

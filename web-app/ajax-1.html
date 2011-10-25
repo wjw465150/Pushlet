@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+  <head>
+  <!--
+    Proof of concept for Ajax technology.
+    Should work in IW, Safari, Mozilla's and Opera 8+.
+    $Id: ajax-1.html,v 1.5 2006/05/25 11:27:00 justb Exp $
+   -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Ajax Demo</title>
+
+    <link href="style.css" rel="stylesheet">
+
+    <!-- See www.jeremie.com, still the most lightweight XML parser... -->
+   	<script type="text/javascript" src="js/xparse.js"></script>
+
+    <!-- Wrapper for browser-specific XMLHttpRequest implementations -->
+	<script type="text/javascript" src="js/xmlhttprequest.js"></script>
+
+ 	<script type="text/javascript"><!--
+
+ 	var eventCount = 0;
+	var refreshURL;
+    var sessionID;
+
+    // Refresh for pull mode
+	function refresh() {
+		// May have left while sleeping
+		if (sessionID == null) {
+			return;
+		}
+		doRequest(refreshURL);
+	}
+
+	// Close pushlet session
+	function leave() {
+		doRequest('/pushlet/pushlet.srv?p_event=leave&p_id=' + sessionID );
+	}
+
+	// Join and subscribe
+	function joinListen() {
+		// Streaming is only supported in Mozilla. E.g. IE does not allow access to responseText on readyState == 3
+		doRequest("/pushlet/pushlet.srv?p_event=join-listen&p_subject=/pushlet/chatx&p_format=xml-strict&p_mode=pull");
+	}
+
+	// Do XML HTTP request
+    function doRequest(url) {
+ 		displayData('creating XMLHttpRequest...');
+
+ 		// Create XMLHttpRequest object and open URL in async mode
+		xmlhttp = new XMLHttpRequest();
+		xmlhttp.open("GET", url, true);
+
+		// Response handler
+		xmlhttp.onreadystatechange=function() {
+			displayData('onreadystatechange: val=' + xmlhttp.readyState);
+			if (xmlhttp.readyState==4) {
+				onResponse(xmlhttp.responseText);
+			}
+		}
+
+		// No need to send body
+		xmlhttp.send(null);
+   }
+
+   // Handle response text
+   function onResponse(responseText) {
+   		// Response is XML document: parse it using XParse
+   		// Using XML DOM is too much hassle...
+   		var xmlDoc = Xparse(responseText);
+
+   		// XML document is parsed into tree of arrays, contents[0] is <pushlet> element
+		eventElements = xmlDoc.contents[0].contents;
+
+		displayData('GOT EVENT #' + (++eventCount) + '\n' + responseText);
+
+		// Go through all <event/> elements
+		for (i=0; i< eventElements.length; i++) {
+			nextEvent = eventElements[i];
+
+			// Determine action based on event type
+			eventType = nextEvent.attributes['p_event'];
+			if (eventType == 'refresh') {
+				// Pull mode: need to sleep and refresh
+				refreshURL = nextEvent.attributes['p_url'];
+				timeout = nextEvent.attributes['p_wait'];
+				setTimeout("refresh()", timeout);
+			} else if (eventType == 'join-listen-ack') {
+				sessionID = nextEvent.attributes['p_id'];
+			} else if (eventType == 'leave-ack') {
+				sessionID = null;
+				eventCount = 0;
+			}
+		 }
+    }
+
+    // Print util
+	function displayData(aString) {
+		document.dataEventDisplay.event.value = document.dataEventDisplay.event.value+"\n"+aString;
+	}
+
+	//-->
+    </script>
+
+  </head>
+  <body onload="PL._init();">
+	
+	<h3>Pushlet Protocol using XMLHttpRequest</h3>
+
+	<p>
+	This example exercises the possible use of
+	<a href="http://www.xml.com/pub/a/2005/02/09/xml-http-request.html">XMLHttpRequest</a>.
+	Press [start] to stream events. Below are the raw events coming from the server.
+		<b><i>NOTE: this example is obsolete but kept for reference.
+			See <a href="ajax-2.html">ajax-2.html</a> for the "real" AJAX example.</i></b>
+	</p>
+	<p>
+	<a href="#" onclick="joinListen();return false;">[Start]</a> -
+	<a href="#" onclick="leave();return false;">[Stop]</a>
+	</p>
+	<form name="dataEventDisplay">
+	  <table border="2" bordercolor="white" cellpadding="4" cellspacing="0" >
+		<tr>
+		 <td>
+		   <textarea cols="60" rows="16" name="event">
+			NO DATA (idle)
+		   </textarea>
+		 </td>
+		</tr>
+	  </table>
+	</form>
+</body>
+</html>

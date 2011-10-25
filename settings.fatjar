@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Mon Oct 24 14:54:50 GMT+08:00 2011
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=E\:\\WJW_DATA\\OpenSource\\pushlet\\eclipse_workspace\\Pushlet\\pushlet.jar
+manifest.mergeall=true
+manifest.mainclass=
+manifest.file=MANIFEST.MF
+jarname.isextern=true
+onejar.expand=
+excludes=<jar|log4j.jar>;<jar|servlet.jar>;<jar|servlet-api.jar>;<jar|jasper.jar>;<jar|jsp-api.jar>;<jar|el-api.jar>;<jar|annotations-api.jar>;<jar|wjw-redismanager.jar>
+includes=
