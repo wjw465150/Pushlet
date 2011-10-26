@@ -128,7 +128,7 @@ public class SessionManager implements ConfigDefs {
 	 */
 	public Session createSession(Event anEvent) throws PushletException {
 		// Trivial
-		return Session.create(createSessionId());
+    return Session.create(createSessionId(anEvent));
 	}
 
 
@@ -244,8 +244,12 @@ public class SessionManager implements ConfigDefs {
 	/**
 	 * Create unique Session id.
 	 */
-	protected String createSessionId() {
-		// Use UUID if specified in config (thanks Uli Romahn)
+	protected String createSessionId(Event anEvent) {
+    if(anEvent.getField(Protocol.P_ID) != null) {  //@wjw_add 是否使用了HttpSession的id
+      return anEvent.getField(Protocol.P_ID);
+    }
+    
+	  // Use UUID if specified in config (thanks Uli Romahn)
 		if (Config.hasProperty(SESSION_ID_GENERATION) && Config.getProperty(SESSION_ID_GENERATION).equals(SESSION_ID_GENERATION_UUID)) {
 			// We want to be Java 1.4 compatible so use UID class (1.5+ we may use java.util.UUID). 
 			return new UID().toString();

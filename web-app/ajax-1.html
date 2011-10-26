@@ -42,7 +42,8 @@
 	// Join and subscribe
 	function joinListen() {
 		// Streaming is only supported in Mozilla. E.g. IE does not allow access to responseText on readyState == 3
-		doRequest("/pushlet/pushlet.srv?p_event=join-listen&p_subject=/pushlet/chatx&p_format=xml-strict&p_mode=pull");
+		doRequest("/pushlet/pushlet.srv?p_event=join-listen&p_subject=/pushlet/ping&p_format=xml-strict&p_mode=pull");
+    //doRequest("/pushlet/pushlet.srv?p_event=join-listen&p_subject=/pushlet/chatx&p_format=xml-strict&p_mode=pull");
 	}
 
 	// Do XML HTTP request

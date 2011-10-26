@@ -13,6 +13,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Enumeration;
@@ -113,6 +115,8 @@ public class Pushlet extends HttpServlet implements Protocol {
 	 */
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Event event = null;
+		
+    //填充Event
 		try {
 			// Create Event by parsing XML from input stream.
 			event = EventParser.parse(new InputStreamReader(request.getInputStream()));
@@ -145,7 +149,13 @@ public class Pushlet extends HttpServlet implements Protocol {
 		// Must have valid event type.
 		String eventType = anEvent.getEventType();
 		try {
-
+	    //->@wjw_add 是否使用HttpSession的id
+	    if (Config.hasProperty(ConfigDefs.SESSION_ID_GENERATION) && Config.getProperty(ConfigDefs.SESSION_ID_GENERATION).equals(ConfigDefs.SESSION_ID_GENERATION_HTTPSESSIONID)) {
+	      HttpSession httpSession=request.getSession(true);
+	      anEvent.setField(Protocol.P_ID, httpSession.getId());
+	    }
+	    //<-@wjw_add
+	    
 			// Get Session: either by creating (on Join eventType)
 			// or by id (any other eventType, since client is supposed to have joined).
 			Session session = null;
