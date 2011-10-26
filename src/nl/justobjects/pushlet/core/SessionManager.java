@@ -79,7 +79,7 @@ public class SessionManager implements ConfigDefs {
 	 * @param method  the method to be called from visitor
 	 * @param args	arguments to be passed in visit method, args[0] will always be Session object
 	 */
-	public void apply(Object visitor, Method method, Object[] args) {
+	public void apply(Object visitor, Method method, Object[] args) {  //TODO@ 细看 Visitor pattern implementation for Session iteration
 
 		synchronized (mutex) {
 
@@ -113,7 +113,7 @@ public class SessionManager implements ConfigDefs {
 					args[0] = nextSession;
 
 					// Use Java reflection to call the method passed by the Visitor
-					method.invoke(visitor, args);
+					method.invoke(visitor, args);  //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
 				} catch (IllegalAccessException e) {
 					Log.warn("apply: illegal method access: ", e);
 				} catch (InvocationTargetException e) {

@@ -76,6 +76,7 @@ public class Pushlet extends HttpServlet implements Protocol {
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Event event = null;
 
+		//填充Event
 		try {
 			// Event parm identifies event type from the client
 			String eventType = Servlets.getParameter(request, P_EVENT);
@@ -139,6 +140,7 @@ public class Pushlet extends HttpServlet implements Protocol {
 	/**
 	 * Generic request handler (GET+POST).
 	 */
+	//TODO@ doRequest处理HTTP请求
 	protected void doRequest(Event anEvent, HttpServletRequest request, HttpServletResponse response) {
 		// Must have valid event type.
 		String eventType = anEvent.getEventType();
@@ -147,7 +149,7 @@ public class Pushlet extends HttpServlet implements Protocol {
 			// Get Session: either by creating (on Join eventType)
 			// or by id (any other eventType, since client is supposed to have joined).
 			Session session = null;
-			if (eventType.startsWith(Protocol.E_JOIN)) {
+			if (eventType.startsWith(Protocol.E_JOIN)) {  //建立会话
 				// Join request: create new subscriber
 				session = SessionManager.getInstance().createSession(anEvent);
 
@@ -159,10 +161,10 @@ public class Pushlet extends HttpServlet implements Protocol {
 				}
 				session.setUserAgent(userAgent);
 
-			} else {
+			} else {  //查找服务端是否有此会话
 				// Must be a request for existing Session
 
-				// Get id
+				// Get sessionId
 				String id = anEvent.getField(P_ID);
 
 				// We must have an id value
@@ -187,7 +189,7 @@ public class Pushlet extends HttpServlet implements Protocol {
 
 			// Let Controller handle request further
 			// including exceptions
-			Command command = Command.create(session, anEvent, request, response);
+			Command command = Command.create(session, anEvent, request, response);  //@wjw_node 封装Command
 			session.getController().doCommand(command);
 		} catch (Throwable t) {
 			// Hmm we should never ever get here

@@ -112,7 +112,7 @@ abstract public class EventPullSource implements EventSource, Runnable {
 				Event event = pullEvent();
 
 				// Let the publisher push it to subscribers.
-				Dispatcher.getInstance().multicast(event);
+				Dispatcher.getInstance().multicast(event);  //TODO@ 把event广播出去
 			} catch (Throwable t) {
 				Log.warn("EventPullSource exception while multicasting ", t);
 				t.printStackTrace();

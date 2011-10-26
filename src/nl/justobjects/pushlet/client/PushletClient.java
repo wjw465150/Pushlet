@@ -302,7 +302,7 @@ public class PushletClient implements Protocol {
 			urlConnection.setUseCaches(false);
 			urlConnection.setDefaultUseCaches(false);
 
-			// TODO: later version may use POST
+			// @TODO: later version may use POST
 			// Enable HTTP POST
 			// urlConnection.setDoOutput(true);
 

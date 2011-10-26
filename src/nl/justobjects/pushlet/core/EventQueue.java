@@ -19,7 +19,7 @@ package nl.justobjects.pushlet.core;
  * @author Just van den Broecke - Just Objects &copy;
  * @version $Id: EventQueue.java,v 1.3 2007/11/23 14:33:07 justb Exp $
  */
-public class EventQueue {
+public class EventQueue {  //@wjw_node 属于Subscriber的事件队列
 	/**
 	 * Defines maximum queue size
 	 */

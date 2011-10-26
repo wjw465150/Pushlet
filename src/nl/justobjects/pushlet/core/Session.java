@@ -51,7 +51,7 @@ public class Session implements Protocol, ConfigDefs {
 		// Init session
 		session.id = anId;
 		session.controller = Controller.create(session);
-		session.subscriber = Subscriber.create(session);
+		session.subscriber = Subscriber.create(session);  //TODO@ 把Subscriber联系上Session
 		return session;
 	}
 

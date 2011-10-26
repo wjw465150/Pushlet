@@ -44,6 +44,7 @@ public class Controller implements Protocol, ConfigDefs {
 	/**
 	 * Handle command.
 	 */
+	//TODO@ 处理客户端HTTP传来的命令
 	public void doCommand(Command aCommand) {
 		try {
 			// Update lease time to live
@@ -295,7 +296,7 @@ public class Controller implements Protocol, ConfigDefs {
 
 				// Event may be targeted to specific user (p_to field)
 				String to = aCommand.reqEvent.getField(P_TO);
-				if (to != null) {
+				if (to != null) {  //发往指定的用户
 					Dispatcher.getInstance().unicast(aCommand.reqEvent, to);
 				} else {
 					// No to: multicast
