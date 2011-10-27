@@ -14,7 +14,7 @@ import nl.justobjects.pushlet.util.PushletException;
  * @version $Id: Subscription.java,v 1.5 2007/11/23 14:33:07 justb Exp $
  */
 public class Subscription implements ConfigDefs {
-	public static final int ID_SIZE = 5;
+	public static final int ID_SIZE = 8;
 	public static final String SUBJECT_SEPARATOR = ",";
 	private String id = Rand.randomName(ID_SIZE);
 	

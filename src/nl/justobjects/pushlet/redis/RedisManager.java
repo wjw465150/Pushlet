@@ -29,7 +29,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 public class RedisManager {
   static final String SESSION_PREFIX = "pushlet:session:"; //存在redis里的session都已此前缀开始,例如"pushlet:session:${id}"
 
-  static final String REDIS_CHARSET = "UTF-8";
+  public static final String REDIS_CHARSET = "UTF-8";
   static final int LIFE_TIME = 86400; //属性存活期多少秒(24 * 60 *60 =24小时)
   static final XStream _xstream = new XStream(new XppDriver());
   static ShardedJedisPool _shardedPool = null;
@@ -118,6 +118,14 @@ public class RedisManager {
   public String toString() {
     return "RedisManager{" + "debug=" + debug + ",serverlist=" + serverlist + ",minConn=" + minConn + ",maxConn="
         + maxConn + ",socketTO=" + socketTO + '}';
+  }
+
+  public String toXML(Object obj) {
+    return _xstream.toXML(obj);
+  }
+
+  public Object fromXML(String xml) {
+    return _xstream.fromXML(xml);
   }
 
   public java.util.Set<byte[]> keys(String pattern) {
@@ -268,7 +276,7 @@ public class RedisManager {
     }
   }
 
-  public java.lang.Boolean exists(java.lang.String key) {
+  public Boolean exists(String key) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
@@ -303,6 +311,7 @@ public class RedisManager {
 
   }
 
+  //Hash操作
   public String hget(String hkey, String field) {
     if (_pool != null) {
       Jedis jedis = null;
@@ -345,7 +354,7 @@ public class RedisManager {
     }
   }
 
-  public java.lang.Long hset(String hkey, String field, String value) {
+  public Long hset(String hkey, String field, String value) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
@@ -447,7 +456,7 @@ public class RedisManager {
     }
   }
 
-  public java.lang.Long hlen(String hkey) {
+  public Long hlen(String hkey) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
@@ -517,7 +526,7 @@ public class RedisManager {
     }
   }
 
-  public java.lang.Boolean hexists(String hkey, String field) {
+  public Boolean hexists(String hkey, String field) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
@@ -593,4 +602,116 @@ public class RedisManager {
       }
     }
   }
+
+  //List操作
+  public Long lpush(String lkey, String value) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.lpush(lkey.getBytes(REDIS_CHARSET), value.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.lpush(lkey.getBytes(REDIS_CHARSET), value.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
+  public String lpop(String lkey) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        byte[] byteValue = jedis.lpop(lkey.getBytes(REDIS_CHARSET));
+        if (byteValue == null) {
+          return null;
+        }
+        return new String(byteValue, REDIS_CHARSET);
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        byte[] byteValue = jedis.lpop(lkey.getBytes(REDIS_CHARSET));
+        if (byteValue == null) {
+          return null;
+        }
+        return new String(byteValue, REDIS_CHARSET);
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
+  public Long llen(String lkey) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.llen(lkey.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.llen(lkey.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
 }

@@ -24,7 +24,7 @@ public class Subscriber implements Protocol, ConfigDefs {
 	/**
 	 * Blocking queue.
 	 */
-	private EventQueue eventQueue = new EventQueue(Config.getIntProperty(QUEUE_SIZE));
+	private EventQueue eventQueue;
 
 	/**
 	 * URL to be used in refresh requests in pull/poll modes.
@@ -72,6 +72,8 @@ public class Subscriber implements Protocol, ConfigDefs {
 		}
 
 		subscriber.session = aSession;
+		subscriber.eventQueue = new EventQueue(aSession.getId() , Config.getIntProperty(QUEUE_SIZE));
+
 		return subscriber;
 	}
 
@@ -317,7 +319,7 @@ public class Subscriber implements Protocol, ConfigDefs {
 		try {
 			if (!eventQueue.enQueue(theEvent, queueWriteTimeoutMillis)) {
 				warn("queue full, bailing out...");
-				bailout();
+				bailout();  //TODO@ 是否要忽略此类异常???
 			}
 
 			// ASSERTION : Event in queue.

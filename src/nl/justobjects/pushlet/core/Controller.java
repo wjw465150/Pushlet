@@ -374,8 +374,6 @@ public class Controller implements Protocol, ConfigDefs {
 	 * Handle Unsubscribe request.
 	 */
 	protected void doUnsubscribe(Command aCommand) throws IOException {
-
-
 		Event responseEvent = null;
 		try {
 			String subscriptionId = aCommand.reqEvent.getField(Protocol.P_SUBSCRIPTION_ID);
