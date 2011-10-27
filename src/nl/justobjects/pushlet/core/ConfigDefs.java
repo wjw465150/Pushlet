@@ -68,6 +68,13 @@ public interface ConfigDefs {
 	public static final String POLL_REFRESH_WAIT_MIN_MILLIS = "poll.refresh.wait.min.millis";
 	public static final String POLL_REFRESH_WAIT_MAX_MILLIS = "poll.refresh.wait.max.millis";
 
+  //@wjw_add for redis
+  public static final String REDIS_MANAGER_CLASS = "redismanager.class";
+  public static final String REDIS_DEBUG="redis.debug";
+  public static final String REDIS_SERVERLIST="redis.serverlist";
+  public static final String REDIS_MINCONN="redis.minconn";
+  public static final String REDIS_MAXCONN="redis.maxconn";
+  public static final String REDIS_SOCKETTO="redis.socketto"; 	
 }
 
 /*

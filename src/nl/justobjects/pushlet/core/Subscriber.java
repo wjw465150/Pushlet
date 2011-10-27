@@ -272,7 +272,7 @@ public class Subscriber implements Protocol, ConfigDefs {
 
 			// Force client refresh request in pull or poll modes
 			if (mode.equals(MODE_PULL) || mode.equals(MODE_POLL)) {
-				sendRefresh(clientAdapter, refreshURL);
+				sendRefresh(clientAdapter, refreshURL);  //@wjw_node 在此方法内部会调用aClientAdapter.stop();来停止输出
 
 				// Always leave loop in pull/poll mode
 				break;
