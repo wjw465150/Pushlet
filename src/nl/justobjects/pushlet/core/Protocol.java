@@ -233,8 +233,8 @@ public interface Protocol {
 
 	//
 	// Values for special/reserved subjects
-	// TODO: use these to publish events when clients do these actions
-	// TODO: Dispatcher may intercept these subjects to send cached events
+	// @TODO: use these to publish events when clients do these actions
+	// @TODO: Dispatcher may intercept these subjects to send cached events
 	//
 	public static final String SUBJECT_META = "/meta";
 	public static final String SUBJECT_META_SUBS = SUBJECT_META + "/subs";

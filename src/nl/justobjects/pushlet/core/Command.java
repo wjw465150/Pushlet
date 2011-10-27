@@ -9,6 +9,7 @@ import nl.justobjects.pushlet.util.Servlets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+//TODO@ Wraps pushlet request/response data
 /**
  * Wraps pushlet request/response data.
  *
@@ -92,6 +93,7 @@ public class Command implements Protocol {
 	/**
 	 * Create client notifier based on "format" parameter passed in request.
 	 */
+	//TODO@ 发送信息到client的适配器
 	protected ClientAdapter createClientAdapter() throws PushletException {
 
 		// Assumed to be set by parent.

@@ -56,7 +56,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
 			// synchronization with SessionManager and to optimize by
 			// not getting an array of all sessions.
 			Object[] args = new Object[2];
-			args[1] = anEvent;
+			args[1] = anEvent;  //@wjw_node 此处args[0]留出来给SessionManager.getInstance().apply来填充为相关的session
 			Method method = sessionManagerVisitor.getMethod("visitBroadcast");
 			SessionManager.getInstance().apply(sessionManagerVisitor, method, args);
 		} catch (Throwable t) {
@@ -73,9 +73,9 @@ public class Dispatcher implements Protocol, ConfigDefs {
 			// our Visitor Method for each Session. This is done to guard
 			// synchronization with SessionManager and to optimize by
 			// not getting an array of all sessions.
-			Method method = sessionManagerVisitor.getMethod("visitMulticast");
 			Object[] args = new Object[2];
-			args[1] = anEvent;
+			args[1] = anEvent;  //TODO@ 此处args[0]留出来给SessionManager.getInstance().apply来填充为相关的session
+      Method method = sessionManagerVisitor.getMethod("visitMulticast");
 			SessionManager.getInstance().apply(sessionManagerVisitor, method, args);
 		} catch (Throwable t) {
 			Log.error("Error calling SessionManager.apply: ", t);
@@ -124,7 +124,6 @@ public class Dispatcher implements Protocol, ConfigDefs {
 		private final Map visitorMethods = new HashMap(2);
 
 		SessionManagerVisitor() throws PushletException {
-
 			try {
 				// Setup Visitor Methods for callback from SessionManager
 				// This is a slight opitmization over creating Method objects

@@ -167,6 +167,7 @@ public class Subscriber implements Protocol, ConfigDefs {
 				Config.getLongProperty(maxWaitProperty));
 	}
 
+	//TODO@ 关键:Get events from queue and push to client.
 	/**
 	 * Get events from queue and push to client.
 	 */
