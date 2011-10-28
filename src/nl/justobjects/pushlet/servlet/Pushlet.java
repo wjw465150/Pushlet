@@ -149,13 +149,6 @@ public class Pushlet extends HttpServlet implements Protocol {
 		// Must have valid event type.
 		String eventType = anEvent.getEventType();
 		try {
-	    //->@wjw_add 是否使用HttpSession的id
-	    if (Config.hasProperty(ConfigDefs.SESSION_ID_GENERATION) && Config.getProperty(ConfigDefs.SESSION_ID_GENERATION).equals(ConfigDefs.SESSION_ID_GENERATION_HTTPSESSIONID)) {
-	      HttpSession httpSession=request.getSession(true);
-	      anEvent.setField(Protocol.P_ID, httpSession.getId());
-	    }
-	    //<-@wjw_add
-	    
 			// Get Session: either by creating (on Join eventType)
 			// or by id (any other eventType, since client is supposed to have joined).
 			Session session = null;

@@ -27,10 +27,7 @@ import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class RedisManager {
-  static final String SESSION_PREFIX = "pushlet:session:"; //存在redis里的session都已此前缀开始,例如"pushlet:session:${id}"
-
   public static final String REDIS_CHARSET = "UTF-8";
-  static final int LIFE_TIME = 86400; //属性存活期多少秒(24 * 60 *60 =24小时)
   static final XStream _xstream = new XStream(new XppDriver());
   static ShardedJedisPool _shardedPool = null;
   static JedisPool _pool = null;

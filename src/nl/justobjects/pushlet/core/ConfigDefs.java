@@ -29,7 +29,6 @@ public interface ConfigDefs {
 	public static final String SESSION_ID_GENERATION = "session.id.generation";
 	public static final String SESSION_ID_GENERATION_UUID = "uuid";
 	public static final String SESSION_ID_GENERATION_RANDOMSTRING = "randomstring";
-	public static final String SESSION_ID_GENERATION_HTTPSESSIONID = "httpSessionid";  //@wjw_add 使用HttpSession的id
 	public static final String SESSION_TIMEOUT_MINS = "session.timeout.mins";
 
 	public static final String SOURCES_ACTIVATE = "sources.activate";

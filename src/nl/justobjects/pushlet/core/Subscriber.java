@@ -82,10 +82,12 @@ public class Subscriber implements Protocol, ConfigDefs {
 	}
 
 	public void stop() {
+	  eventQueue.clear();  //@wjw_add 在停止时要清除事件队列
 		removeSubscriptions();
 		active = false;
 	}
 
+	//@wjw_node 在出现意外情况时,被调用,在此方法里停止session
 	public void bailout() {
 		session.stop();
 	}

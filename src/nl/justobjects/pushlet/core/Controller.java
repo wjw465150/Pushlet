@@ -211,8 +211,6 @@ public class Controller implements Protocol, ConfigDefs {
 	 * Handle Listen request.
 	 */
 	protected void doListen(Command aCommand) throws PushletException {
-
-
 		String mode = MODE_STREAM;
 		// Should we always force "pull" mode ?
 		if (Config.getBoolProperty(LISTEN_FORCE_PULL_ALL)) {
@@ -268,7 +266,7 @@ public class Controller implements Protocol, ConfigDefs {
 		listenAckEvent.setField(P_FORMAT, session.getFormat());
 
 		// Activate the subscriber
-		getSubscriber().start();
+		getSubscriber().start();  //@wjw_node 其实是使Subscriber的内部active状态置为true
 
 		// Enqueue listen ack event on data channel
 		aCommand.setResponseEvent(listenAckEvent);
@@ -343,7 +341,6 @@ public class Controller implements Protocol, ConfigDefs {
 				responseEvent.setField(P_ID, session.getId());
 				responseEvent.setField(P_REASON, "no subject provided");
 			} else {
-
 				String label = aCommand.reqEvent.getField(Protocol.P_SUBSCRIPTION_LABEL);
 				subscription = getSubscriber().addSubscription(subject, label);
 

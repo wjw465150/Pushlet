@@ -127,8 +127,8 @@ public class SessionManager implements ConfigDefs {
 	 * Create new Session (but add later).
 	 */
 	public Session createSession(Event anEvent) throws PushletException {
-		// Trivial
-    return Session.create(createSessionId(anEvent));
+    // Trivial
+    return Session.create(createSessionId());
 	}
 
 
@@ -244,35 +244,31 @@ public class SessionManager implements ConfigDefs {
 	/**
 	 * Create unique Session id.
 	 */
-	protected String createSessionId(Event anEvent) {
-    if(anEvent.getField(Protocol.P_ID) != null) {  //@wjw_add 是否使用了HttpSession的id
-      return anEvent.getField(Protocol.P_ID);
+	protected String createSessionId() {
+    // Use UUID if specified in config (thanks Uli Romahn)
+    if (Config.hasProperty(SESSION_ID_GENERATION) && Config.getProperty(SESSION_ID_GENERATION).equals(SESSION_ID_GENERATION_UUID)) {
+      // We want to be Java 1.4 compatible so use UID class (1.5+ we may use java.util.UUID). 
+      return new UID().toString();
     }
-    
-	  // Use UUID if specified in config (thanks Uli Romahn)
-		if (Config.hasProperty(SESSION_ID_GENERATION) && Config.getProperty(SESSION_ID_GENERATION).equals(SESSION_ID_GENERATION_UUID)) {
-			// We want to be Java 1.4 compatible so use UID class (1.5+ we may use java.util.UUID). 
-			return new UID().toString();
-		}
 
-		// Other cases use random name
+    // Other cases use random name
 
-		// Create a unique session id
-		// In 99.9999 % of the cases this should be generated at once
-		// We need the mutext to prevent the chance of creating
-		// same-valued ids (thanks Uli Romahn)
-		synchronized (mutex) {
-			String id;
-			while (true) {
-				id = Rand.randomName(Config.getIntProperty(SESSION_ID_SIZE));
-				if (!hasSession(id)) {
-					// Created unique session id
-					break;
-				}
-			}
-			return id;
-		}
-	}
+    // Create a unique session id
+    // In 99.9999 % of the cases this should be generated at once
+    // We need the mutext to prevent the chance of creating
+    // same-valued ids (thanks Uli Romahn)
+    synchronized (mutex) {
+      String id;
+      while (true) {
+        id = Rand.randomName(Config.getIntProperty(SESSION_ID_SIZE));
+        if (!hasSession(id)) {
+          // Created unique session id
+          break;
+        }
+      }
+      return id;
+    }
+  }
 
 	/**
 	 * Util: stdout printing.

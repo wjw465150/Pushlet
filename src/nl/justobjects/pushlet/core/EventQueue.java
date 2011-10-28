@@ -177,4 +177,9 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     return (Event) redis.fromXML(redis.lpop(redis_eventqueue_key));
   }
 
+  //@wjw_add 清除保存在redis里的事件
+  public void clear() {
+    redis.del(redis_eventqueue_key);
+  }
+
 }
