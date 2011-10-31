@@ -88,6 +88,7 @@ public class Subscriber implements Protocol, ConfigDefs {
     if (subscriber.isPersistence()) {
       subscriber.readStatus();
     }
+    subscriber.saveStatus();
 
     return subscriber;
   }

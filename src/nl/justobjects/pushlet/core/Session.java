@@ -64,6 +64,8 @@ public class Session implements Protocol, ConfigDefs {
     if (session.isPersistence()) {
       session.readStatus();
     }
+    session.saveStatus();
+    
     return session;
   }
 
