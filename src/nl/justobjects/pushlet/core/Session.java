@@ -160,6 +160,7 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void stop() {
+    //TODO@ wjw考虑在社交环境中,pushlet会话停止而要保留此会话的Subscriber,Controll,EventQueue等所有数据?
     redis.del(myHkey);
 
     subscriber.stop();

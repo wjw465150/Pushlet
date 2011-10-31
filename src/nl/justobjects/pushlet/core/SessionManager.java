@@ -168,7 +168,7 @@ public class SessionManager implements ConfigDefs {
   /**
    * Get Session by session id.
    */
-  public Session getSession(String anId) {
+  public Session getSession(boolean canAdd,String anId) {
     synchronized (mutex) {
       Session tmpSession = (Session) sessions.get(anId);
 
@@ -176,7 +176,10 @@ public class SessionManager implements ConfigDefs {
       if (tmpSession == null && redis.exists(Session.REDIS_SESSION_PREFIX + anId)) {
         try {
           tmpSession = Session.create(anId);
-          this.addSession(tmpSession);
+          tmpSession.getSubscriber().setActive(true);
+          if(canAdd) {
+            this.addSession(tmpSession);
+          }
         } catch (PushletException e) {
           tmpSession = null;
           Log.warn(e.getMessage());

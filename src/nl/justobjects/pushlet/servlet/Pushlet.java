@@ -175,7 +175,7 @@ public class Pushlet extends HttpServlet implements Protocol {
         }
 
         // We have an id: get the session object
-        session = SessionManager.getInstance().getSession(id);
+        session = SessionManager.getInstance().getSession(true,id);
 
         // Check for invalid id
         if (session == null) {
