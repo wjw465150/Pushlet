@@ -87,7 +87,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
    */
   public synchronized void unicast(Event event, String aSessionId) {
     // Get subscriber to send event to
-    Session session = SessionManager.getInstance().getSession(aSessionId);
+    Session session = SessionManager.getInstance().getSession(false,aSessionId);
     if (session == null) {
       Log.warn("unicast: session with id=" + aSessionId + " does not exist");
       return;
