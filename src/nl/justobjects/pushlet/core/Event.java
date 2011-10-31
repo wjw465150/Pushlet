@@ -138,6 +138,11 @@ public class Event implements Protocol, Serializable {
 	private void setAttrs(Map theAttributes) {
 		attributes.putAll(theAttributes);
 	}
+
+	//@wjw_add 清除Map
+  public void clear() {
+    attributes.clear();
+  }
 }
 
 /*

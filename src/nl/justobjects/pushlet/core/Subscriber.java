@@ -80,6 +80,7 @@ public class Subscriber implements Protocol, ConfigDefs {
 	}
 
 	public void stop() {
+	  eventQueue.clear();  //@wjw_add 在停止时要清除事件队列
 		removeSubscriptions();
 		active = false;
 	}
