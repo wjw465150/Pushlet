@@ -96,14 +96,14 @@ public class Subscriber implements Protocol, ConfigDefs {
   public void setActive(boolean status) {
     active = status;
   }
-  
+
   public void start() {
     active = true;
   }
 
   public void stop() {
     eventQueue.clear(); //@wjw_add 在停止时要清除事件队列
-    
+
     redis.del(myHkey);
     removeSubscriptions();
     active = false;
@@ -426,7 +426,9 @@ public class Subscriber implements Protocol, ConfigDefs {
   }
 
   public void saveStatus() {
-    redis.hset(myHkey, "mode", mode);
+    if (mode != null) {
+      redis.hset(myHkey, "mode", mode);
+    }
   }
 
   public void readStatus() {

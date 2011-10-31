@@ -14,7 +14,7 @@ import nl.justobjects.pushlet.util.PushletException;
  * @version $Id: Session.java,v 1.8 2007/11/23 14:33:07 justb Exp $
  */
 public class Session implements Protocol, ConfigDefs {
-  static RedisManager redis= RedisManager.getInstance();
+  static RedisManager redis = RedisManager.getInstance();
   public static final String REDIS_SESSION_PREFIX = "pushlet:session:";
   private String myHkey;
 
@@ -65,7 +65,7 @@ public class Session implements Protocol, ConfigDefs {
       session.readStatus();
     }
     session.saveStatus();
-    
+
     return session;
   }
 
@@ -200,10 +200,16 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void saveStatus() {
-    redis.hset(myHkey, "userAgent", userAgent);
+    if (userAgent != null) {
+      redis.hset(myHkey, "userAgent", userAgent);
+    }
     redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
-    redis.hset(myHkey, "address", address);
-    redis.hset(myHkey, "format", format);
+    if (address != null) {
+      redis.hset(myHkey, "address", address);
+    }
+    if (format != null) {
+      redis.hset(myHkey, "format", format);
+    }
   }
 
   public void readStatus() {
