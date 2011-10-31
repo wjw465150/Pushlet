@@ -23,10 +23,7 @@ import nl.justobjects.pushlet.redis.RedisManager;
  * @version $Id: EventQueue.java,v 1.3 2007/11/23 14:33:07 justb Exp $
  */
 public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
-  static RedisManager redis;
-  static {
-    redis = RedisManager.getInstance();
-  }
+  static RedisManager redis = RedisManager.getInstance();
   private static final String REDIS_EVENTQUEUE_PREFIX = "pushlet:eventqueue:";
   private static final int SLEEP_TIME = 200;
 
@@ -35,7 +32,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
    */
   private int capacity = 256;
 
-  private String redis_eventqueue_key;
+  private String myLkey;
 
   /**
    * Construct queue with default (8) capacity.
@@ -50,7 +47,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   public EventQueue(String aSessionId, int capacity) {
     this.capacity = capacity;
 
-    redis_eventqueue_key = REDIS_EVENTQUEUE_PREFIX + aSessionId;
+    myLkey = REDIS_EVENTQUEUE_PREFIX + aSessionId;
   }
 
   /**
@@ -81,7 +78,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     }
 
     // Put item in queue
-    redis.lpush(redis_eventqueue_key, redis.toXML(item));
+    redis.lpush(myLkey, redis.toXML(item));
 
     return true;
   }
@@ -143,7 +140,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     // Dequeue all items item
     String strEvent = null;
     java.util.List<Event> listEvent = new java.util.ArrayList<Event>(this.getSize());
-    while ((strEvent = redis.lpop(redis_eventqueue_key)) != null) {
+    while ((strEvent = redis.lpop(myLkey)) != null) {
       listEvent.add((Event) redis.fromXML(strEvent));
     }
     Event[] events = listEvent.toArray(new Event[0]);
@@ -153,33 +150,33 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   }
 
   public int getSize() {
-    return redis.llen(redis_eventqueue_key).intValue();
+    return redis.llen(myLkey).intValue();
   }
 
   /**
    * Is the queue empty ?
    */
   public boolean isEmpty() {
-    return redis.llen(redis_eventqueue_key).intValue() == 0;
+    return redis.llen(myLkey).intValue() == 0;
   }
 
   /**
    * Is the queue full ?
    */
   public boolean isFull() {
-    return redis.llen(redis_eventqueue_key).intValue() == capacity;
+    return redis.llen(myLkey).intValue() == capacity;
   }
 
   /**
    * Circular counter.
    */
   private Event fetchNext() {
-    return (Event) redis.fromXML(redis.lpop(redis_eventqueue_key));
+    return (Event) redis.fromXML(redis.lpop(myLkey));
   }
 
   //@wjw_add 清除保存在redis里的事件
   public void clear() {
-    redis.del(redis_eventqueue_key);
+    redis.del(myLkey);
   }
 
 }

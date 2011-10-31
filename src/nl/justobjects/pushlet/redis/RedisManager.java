@@ -487,6 +487,42 @@ public class RedisManager {
     }
   }
 
+  public java.util.Set<byte[]> hkeys(String hkey) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.hkeys(hkey.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        byte[] bytesKey = hkey.getBytes(REDIS_CHARSET);
+        Jedis jedisA = jedis.getShard(bytesKey);
+        return jedisA.hkeys(bytesKey);
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
   public java.util.List<byte[]> hvals(String hkey) {
     if (_pool != null) {
       Jedis jedis = null;
@@ -557,48 +593,49 @@ public class RedisManager {
     }
   }
 
-  public void hclear(String hkey) {
-    if (_pool != null) {
-      Jedis jedis = null;
-      try {
-        jedis = _pool.getResource();
-        byte[] bytesHKey = hkey.getBytes(REDIS_CHARSET);
-        java.util.Set<byte[]> byteFields = jedis.hkeys(bytesHKey);
-        for (byte[] bfield : byteFields) {
-          jedis.hdel(bytesHKey, bfield);
-        }
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
-      } finally {
-        if (jedis != null) {
-          try {
-            _pool.returnResource(jedis);
-          } catch (Throwable thex) {
-          }
-        }
-      }
-    } else {
-      ShardedJedis jedis = null;
-      try {
-        jedis = _shardedPool.getResource();
-
-        byte[] bytesHKey = hkey.getBytes(REDIS_CHARSET);
-        java.util.Set<byte[]> byteFields = jedis.hkeys(bytesHKey);
-        for (byte[] bfield : byteFields) {
-          jedis.hdel(bytesHKey, bfield);
-        }
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
-      } finally {
-        if (jedis != null) {
-          try {
-            _shardedPool.returnResource(jedis);
-          } catch (Throwable thex) {
-          }
-        }
-      }
-    }
-  }
+  //不需要这样做,通过del命令就可解决  
+  //  public void hclear(String hkey) {
+  //    if (_pool != null) {
+  //      Jedis jedis = null;
+  //      try {
+  //        jedis = _pool.getResource();
+  //        byte[] bytesHKey = hkey.getBytes(REDIS_CHARSET);
+  //        java.util.Set<byte[]> byteFields = jedis.hkeys(bytesHKey);
+  //        for (byte[] bfield : byteFields) {
+  //          jedis.hdel(bytesHKey, bfield);
+  //        }
+  //      } catch (IOException e) {
+  //        throw new JedisConnectionException(e);
+  //      } finally {
+  //        if (jedis != null) {
+  //          try {
+  //            _pool.returnResource(jedis);
+  //          } catch (Throwable thex) {
+  //          }
+  //        }
+  //      }
+  //    } else {
+  //      ShardedJedis jedis = null;
+  //      try {
+  //        jedis = _shardedPool.getResource();
+  //
+  //        byte[] bytesHKey = hkey.getBytes(REDIS_CHARSET);
+  //        java.util.Set<byte[]> byteFields = jedis.hkeys(bytesHKey);
+  //        for (byte[] bfield : byteFields) {
+  //          jedis.hdel(bytesHKey, bfield);
+  //        }
+  //      } catch (IOException e) {
+  //        throw new JedisConnectionException(e);
+  //      } finally {
+  //        if (jedis != null) {
+  //          try {
+  //            _shardedPool.returnResource(jedis);
+  //          } catch (Throwable thex) {
+  //          }
+  //        }
+  //      }
+  //    }
+  //  }
 
   //List操作
   public Long lpush(String lkey, String value) {
