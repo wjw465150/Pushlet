@@ -83,7 +83,7 @@
    function onRefreshAck(event){
         for(var i=0;i<onlines.length;i++){
             //当前时间戳-上次更新的时间戳 如果间隔较大 说明没更新  掉了
-            if((event.get('p_time')- onlines[i].aliveTS)>15){
+            if((event.get('p_time')- onlines[i].aliveTS)>15){  //@wjw_node p_time的单位是秒
                 var t=new Ext.ToolTip({
 			        target: 'mainUI',
 			        dismissDelay: 15000 ,
