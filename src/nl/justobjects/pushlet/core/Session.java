@@ -116,7 +116,9 @@ public class Session implements Protocol, ConfigDefs {
    */
   protected void setAddress(String anAddress) {
     address = anAddress;
-    redis.hset(myHkey, "address", address);
+    if (anAddress != null) {
+      redis.hset(myHkey, "address", address);
+    }
   }
 
   /**
@@ -124,7 +126,9 @@ public class Session implements Protocol, ConfigDefs {
    */
   protected void setFormat(String aFormat) {
     format = aFormat;
-    redis.hset(myHkey, "format", format);
+    if (aFormat != null) {
+      redis.hset(myHkey, "format", format);
+    }
   }
 
   /**
@@ -132,7 +136,9 @@ public class Session implements Protocol, ConfigDefs {
    */
   public void setUserAgent(String aUserAgent) {
     userAgent = aUserAgent;
-    redis.hset(myHkey, "userAgent", userAgent);
+    if (aUserAgent != null) {
+      redis.hset(myHkey, "userAgent", userAgent);
+    }
   }
 
   /**
