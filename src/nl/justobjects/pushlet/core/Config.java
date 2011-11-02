@@ -3,12 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
+import java.io.File;
+import java.util.Properties;
+
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Sys;
-
-import java.io.File;
-import java.util.Properties;
 
 /**
  * Loads and maintains overall configuration.

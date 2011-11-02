@@ -3,12 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.Sys;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import nl.justobjects.pushlet.util.Sys;
 
 /**
  * Represents the event data.

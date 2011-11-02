@@ -9,9 +9,6 @@ import nl.justobjects.pushlet.core.Event;
 import nl.justobjects.pushlet.core.Protocol;
 import nl.justobjects.pushlet.util.PushletException;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Demonstrates join-listen service.
  * 

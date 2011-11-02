@@ -3,11 +3,6 @@
 
 package nl.justobjects.pushlet.test;
 
-import nl.justobjects.pushlet.core.Dispatcher;
-import nl.justobjects.pushlet.core.Event;
-import nl.justobjects.pushlet.core.EventSource;
-import nl.justobjects.pushlet.util.Rand;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +10,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.StringTokenizer;
 import java.util.Vector;
+
+import nl.justobjects.pushlet.core.Dispatcher;
+import nl.justobjects.pushlet.core.Event;
+import nl.justobjects.pushlet.core.EventSource;
+import nl.justobjects.pushlet.util.Rand;
 
 /**
  * Event sources that push events (for testing).

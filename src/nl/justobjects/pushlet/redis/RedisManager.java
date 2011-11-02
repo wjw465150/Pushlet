@@ -1,23 +1,14 @@
 package nl.justobjects.pushlet.redis;
 
-import nl.justobjects.pushlet.core.*;
-
-import nl.justobjects.pushlet.util.Log;
-import nl.justobjects.pushlet.util.PushletException;
-import nl.justobjects.pushlet.util.Rand;
-import nl.justobjects.pushlet.util.Sys;
-
 import internal.com.thoughtworks.xstream.XStream;
-import internal.com.thoughtworks.xstream.io.xml.DomDriver;
 import internal.com.thoughtworks.xstream.io.xml.XppDriver;
 import internal.org.apache.commons.pool.impl.GenericObjectPool;
 
-import java.rmi.server.UID;
-import java.util.*;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
+import nl.justobjects.pushlet.core.Config;
+import nl.justobjects.pushlet.core.ConfigDefs;
+import nl.justobjects.pushlet.util.Log;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;

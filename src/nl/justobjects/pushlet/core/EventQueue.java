@@ -3,8 +3,6 @@
 
 package nl.justobjects.pushlet.core;
 
-import java.io.UnsupportedEncodingException;
-
 import nl.justobjects.pushlet.redis.RedisManager;
 
 /**

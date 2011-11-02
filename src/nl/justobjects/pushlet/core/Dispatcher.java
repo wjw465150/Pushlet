@@ -3,12 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.Log;
-import nl.justobjects.pushlet.util.PushletException;
-
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import nl.justobjects.pushlet.util.Log;
+import nl.justobjects.pushlet.util.PushletException;
 
 /**
  * Routes Events to Subscribers.
@@ -49,7 +49,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
   /**
    * Send event to all subscribers.
    */
-  public synchronized void broadcast(Event anEvent) {
+  public void broadcast(Event anEvent) {
     try {
       // Let the SessionManager loop through Sessions, calling
       // our Visitor Method for each Session. This is done to guard
@@ -57,7 +57,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
       // not getting an array of all sessions.
       Object[] args = new Object[2];
       args[1] = anEvent; //@wjw_node 此处args[0]留出来给SessionManager.getInstance().apply来填充为相关的session
-      Method method = sessionManagerVisitor.getMethod("visitBroadcast");
+      Method method = sessionManagerVisitor.getMethod(SessionManagerVisitor.VISIT_BROADCAST);
       SessionManager.getInstance().apply(sessionManagerVisitor, method, args);
     } catch (Throwable t) {
       Log.error("Error calling SessionManager.apply: ", t);
@@ -67,7 +67,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
   /**
    * Send event to subscribers matching Event subject.
    */
-  public synchronized void multicast(Event anEvent) {
+  public void multicast(Event anEvent) {
     try {
       // Let the SessionManager loop through Sessions, calling
       // our Visitor Method for each Session. This is done to guard
@@ -75,7 +75,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
       // not getting an array of all sessions.
       Object[] args = new Object[2];
       args[1] = anEvent; //TODO@ 此处args[0]留出来给SessionManager.getInstance().apply来填充为相关的session
-      Method method = sessionManagerVisitor.getMethod("visitMulticast");
+      Method method = sessionManagerVisitor.getMethod(SessionManagerVisitor.VISIT_MULTICAST);
       SessionManager.getInstance().apply(sessionManagerVisitor, method, args);
     } catch (Throwable t) {
       Log.error("Error calling SessionManager.apply: ", t);
@@ -85,9 +85,9 @@ public class Dispatcher implements Protocol, ConfigDefs {
   /**
    * Send event to specific subscriber.
    */
-  public synchronized void unicast(Event event, String aSessionId) {
+  public void unicast(Event event, String aSessionId) {
     // Get subscriber to send event to
-    Session session = SessionManager.getInstance().getSession(false,aSessionId);
+    Session session = SessionManager.getInstance().getSession(false, aSessionId);
     if (session == null) {
       Log.warn("unicast: session with id=" + aSessionId + " does not exist");
       return;
@@ -121,6 +121,8 @@ public class Dispatcher implements Protocol, ConfigDefs {
    */
   private class SessionManagerVisitor {
     private final Map visitorMethods = new HashMap(2);
+    static final String VISIT_MULTICAST = "visitMulticast";
+    static final String VISIT_BROADCAST = "visitBroadcast";
 
     SessionManagerVisitor() throws PushletException {
       try {
@@ -128,8 +130,8 @@ public class Dispatcher implements Protocol, ConfigDefs {
         // This is a slight opitmization over creating Method objects
         // on each invokation.
         Class[] argsClasses = { Session.class, Event.class };
-        visitorMethods.put("visitMulticast", this.getClass().getMethod("visitMulticast", argsClasses));
-        visitorMethods.put("visitBroadcast", this.getClass().getMethod("visitBroadcast", argsClasses));
+        visitorMethods.put(VISIT_MULTICAST, this.getClass().getMethod(VISIT_MULTICAST, argsClasses));
+        visitorMethods.put(VISIT_BROADCAST, this.getClass().getMethod(VISIT_BROADCAST, argsClasses));
       } catch (NoSuchMethodException e) {
         throw new PushletException("Failed to setup SessionManagerVisitor", e);
       }
@@ -175,77 +177,3 @@ public class Dispatcher implements Protocol, ConfigDefs {
     }
   }
 }
-
-/*
- * $Log: Dispatcher.java,v $ Revision 1.9 2007/12/04 13:55:53 justb reimplement
- * SessionManager concurrency (prev version was not thread-safe!)
- * 
- * Revision 1.8 2007/11/23 14:33:07 justb core classes now configurable through
- * factory
- * 
- * Revision 1.7 2005/02/28 12:45:59 justb introduced Command class
- * 
- * Revision 1.6 2005/02/28 09:14:55 justb sessmgr/dispatcher factory/singleton
- * support
- * 
- * Revision 1.5 2005/02/21 16:59:06 justb SessionManager and session lease
- * introduced
- * 
- * Revision 1.4 2005/02/21 11:50:46 justb ohase1 of refactoring Subscriber into
- * Session/Controller/Subscriber
- * 
- * Revision 1.3 2005/02/18 12:36:47 justb changes for renaming and
- * configurability
- * 
- * Revision 1.2 2005/02/18 10:07:23 justb many renamings of classes (make names
- * compact)
- * 
- * Revision 1.1 2005/02/18 09:54:15 justb refactor: rename Publisher Dispatcher
- * and single Subscriber class
- * 
- * Revision 1.14 2005/02/16 14:39:34 justb fixed leave handling and added "poll"
- * mode
- * 
- * Revision 1.13 2004/10/24 20:50:35 justb refine subscription with label and
- * sending sid and label on events
- * 
- * Revision 1.12 2004/10/24 12:58:18 justb revised client and test classes for
- * new protocol
- * 
- * Revision 1.11 2004/09/26 21:39:43 justb allow multiple subscriptions and
- * out-of-band requests
- * 
- * Revision 1.10 2004/09/20 22:01:38 justb more changes for new protocol
- * 
- * Revision 1.9 2004/09/03 22:35:37 justb Almost complete rewrite, just checking
- * in now
- * 
- * Revision 1.8 2004/08/13 23:36:05 justb rewrite of Pullet into Pushlet "pull"
- * mode
- * 
- * Revision 1.7 2004/08/12 13:18:54 justb cosmetic changes
- * 
- * Revision 1.6 2004/03/10 15:45:55 justb many cosmetic changes
- * 
- * Revision 1.5 2004/03/10 13:59:28 justb rewrite using Collection classes and
- * finer synchronization
- * 
- * Revision 1.4 2003/08/15 08:37:40 justb fix/add Copyright+LGPL file headers
- * and footers
- * 
- * Revision 1.3 2003/08/12 08:54:40 justb added getSubscriberCount() and use Log
- * 
- * Revision 1.2 2003/05/18 16:15:08 justb support for XML encoded Events
- * 
- * Revision 1.1.1.1 2002/09/24 21:02:31 justb import to sourceforge
- * 
- * Revision 1.1.1.1 2002/09/20 22:48:18 justb import to SF
- * 
- * Revision 1.1.1.1 2002/09/20 14:19:04 justb first import into SF
- * 
- * Revision 1.3 2002/04/15 20:42:41 just reformatting and renaming GuardedQueue
- * to EventQueue
- * 
- * Revision 1.2 2000/08/21 20:48:29 just added CVS log and id tags plus
- * copyrights
- */

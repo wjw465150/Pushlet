@@ -3,11 +3,11 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.PushletException;
-import nl.justobjects.pushlet.util.Servlets;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import nl.justobjects.pushlet.util.PushletException;
+import nl.justobjects.pushlet.util.Servlets;
 
 //TODO@ Wraps pushlet request/response data
 /**

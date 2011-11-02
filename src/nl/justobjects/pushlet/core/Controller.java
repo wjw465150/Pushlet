@@ -3,9 +3,9 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.PushletException;
-
 import java.io.IOException;
+
+import nl.justobjects.pushlet.util.PushletException;
 
 /**
  * Handles servlet requests from client.

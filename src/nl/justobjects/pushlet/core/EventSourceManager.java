@@ -3,13 +3,13 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.Log;
-import nl.justobjects.pushlet.util.Sys;
-
+import java.io.File;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Vector;
-import java.io.File;
+
+import nl.justobjects.pushlet.util.Log;
+import nl.justobjects.pushlet.util.Sys;
 
 /**
  * Maintains lifecycle of event sources.
