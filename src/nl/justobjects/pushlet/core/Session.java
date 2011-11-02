@@ -6,6 +6,7 @@ package nl.justobjects.pushlet.core;
 import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
+import nl.justobjects.pushlet.util.Sys;
 
 /**
  * Represents client pushlet session state.
@@ -31,6 +32,7 @@ public class Session implements Protocol, ConfigDefs {
   private String format = FORMAT_XML;
 
   private String id;
+  private long birthday = System.currentTimeMillis(); //session的创建时间
 
   /**
    * Protected constructor as we create through factory method.
@@ -95,6 +97,10 @@ public class Session implements Protocol, ConfigDefs {
    */
   public String getId() {
     return id;
+  }
+
+  public long getBirthday() {
+    return birthday;
   }
 
   /**
@@ -209,6 +215,7 @@ public class Session implements Protocol, ConfigDefs {
     if (userAgent != null) {
       redis.hset(myHkey, "userAgent", userAgent);
     }
+    redis.hset(myHkey, "birthday", String.valueOf(birthday));
     redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
     if (address != null) {
       redis.hset(myHkey, "address", address);
@@ -219,8 +226,16 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void readStatus() {
+    String tmpStr;
     userAgent = redis.hget(myHkey, "userAgent");
-    timeToLive = Long.parseLong(redis.hget(myHkey, "timeToLive"));
+    tmpStr = redis.hget(myHkey, "birthday");
+    if (tmpStr != null) {
+      birthday = Long.parseLong(tmpStr);
+    }
+    tmpStr = redis.hget(myHkey, "timeToLive");
+    if (tmpStr != null) {
+      timeToLive = Long.parseLong(tmpStr);
+    }
     address = redis.hget(myHkey, "address");
     format = redis.hget(myHkey, "format");
   }
