@@ -171,7 +171,7 @@ public class Pushlet extends HttpServlet implements Protocol {
         // Must be a request for existing Session
 
         // Get sessionId
-        String id = anEvent.getField(P_ID);
+        String id = anEvent.getField(P_ID);  //TODO@SNS 在SNS里是否在建立会话时,判断是否有p_id呢?
 
         // We must have an id value
         if (id == null) {
