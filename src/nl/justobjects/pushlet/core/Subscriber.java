@@ -3,16 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
+import java.io.UnsupportedEncodingException;
+
 import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Rand;
 import nl.justobjects.pushlet.util.Sys;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
 /**
  * Handles data channel between dispatcher and client.
@@ -99,12 +95,13 @@ public class Subscriber implements Protocol, ConfigDefs {
   public void stop() {
     eventQueue.clear(); //@wjw_add 在停止时要清除事件队列
 
-    redis.del(myHkey);
-    removeSubscriptions();
+    redis.del(myHkey); //清除redis里的subscriber
+    removeSubscriptions(); //清除redis里的subscriptions
     active = false;
   }
 
   //@wjw_node 在出现意外情况时,被调用,在此方法里停止session
+  //TODO@SNS 在处理SNS时,应该屏蔽
   public void bailout() {
     session.stop();
   }
@@ -208,12 +205,11 @@ public class Subscriber implements Protocol, ConfigDefs {
     return Rand.randomLong(Config.getLongProperty(minWaitProperty), Config.getLongProperty(maxWaitProperty));
   }
 
-  //TODO@ 关键:Get events from queue and push to client.
+  //TODO@fetchEvents 关键:Get events from queue and push to client.
   /**
    * Get events from queue and push to client.
    */
   public void fetchEvents(Command aCommand) throws PushletException {
-
     String refreshURL = aCommand.httpReq.getRequestURI() + "?" + P_ID + "=" + session.getId() + "&" + P_EVENT + "="
         + E_REFRESH;
 
@@ -327,7 +323,7 @@ public class Subscriber implements Protocol, ConfigDefs {
   public Subscription match(Event event) {
     Subscription[] subscriptions = getSubscriptions();
     for (int i = 0; i < subscriptions.length; i++) {
-      if (subscriptions[i].match(event)) {
+      if (subscriptions[i].match(event)) { //@wjw_node 使用String.startsWith()来判断
         return subscriptions[i];
       }
     }

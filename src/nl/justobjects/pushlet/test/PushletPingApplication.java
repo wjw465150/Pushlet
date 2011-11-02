@@ -3,14 +3,14 @@
 
 package nl.justobjects.pushlet.test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import nl.justobjects.pushlet.client.PushletClient;
 import nl.justobjects.pushlet.client.PushletClientListener;
 import nl.justobjects.pushlet.core.Event;
 import nl.justobjects.pushlet.core.Protocol;
 import nl.justobjects.pushlet.util.PushletException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Tester to demonstrate Pushlet use in Java applications.

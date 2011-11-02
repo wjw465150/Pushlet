@@ -3,8 +3,8 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.Rand;
 import nl.justobjects.pushlet.util.PushletException;
+import nl.justobjects.pushlet.util.Rand;
 
 /**
  * Represents single subject subscription
@@ -15,7 +15,7 @@ import nl.justobjects.pushlet.util.PushletException;
 public class Subscription implements ConfigDefs {
   public static final int ID_SIZE = 8;
   public static final String SUBJECT_SEPARATOR = ",";
-  private String id = "subscription:"+Rand.randomName(ID_SIZE);
+  private String id = "subscription:" + Rand.randomName(ID_SIZE);
 
   private String subject; //@wjw_node 此字段不使用,而是使用subjects字段
   private String[] subjects; // We may subscribe to multiple subjects by separating

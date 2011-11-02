@@ -3,14 +3,16 @@
 
 package nl.justobjects.pushlet.test;
 
+import java.applet.Applet;
+import java.awt.Color;
+import java.awt.GridLayout;
+import java.awt.TextArea;
+
 import nl.justobjects.pushlet.client.PushletClient;
 import nl.justobjects.pushlet.client.PushletClientListener;
 import nl.justobjects.pushlet.core.Event;
 import nl.justobjects.pushlet.core.Protocol;
 import nl.justobjects.pushlet.util.PushletException;
-
-import java.applet.Applet;
-import java.awt.*;
 
 /**
  * Tester for applet clients; displays incoming events in text area.

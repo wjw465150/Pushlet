@@ -52,12 +52,7 @@ public class SessionManager implements ConfigDefs {
   /**
    * Map of active sessions, keyed by their id, all access is through mutex.
    */
-  private Map<String,Session> sessions = new ConcurrentHashMap<String,Session>(13);
-
-  /**
-   * Lock for any operation on Sessions (Session Map and/or -cache).
-   */
-  private final Object mutex = new Object();
+  private Map<String, Session> sessions = new ConcurrentHashMap<String, Session>(13);
 
   /**
    * Singleton pattern: protected constructor needed for derived classes.
@@ -80,35 +75,35 @@ public class SessionManager implements ConfigDefs {
    *          Session object
    */
   public void apply(Object visitor, Method method, Object[] args) { //TODO@ 细看 Visitor pattern implementation for Session iteration
-      // Valid session cache: loop and call supplied Visitor method
-      for (Session nextSession : sessions.values()) {
-        // Session cache may not be entirely filled
-        if (nextSession == null) {
-          break;
-        }
-
-        try {
-          // First argument is always a Session object
-          args[0] = nextSession;
-
-          // Use Java reflection to call the method passed by the Visitor
-          method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
-        } catch (IllegalAccessException e) {
-          Log.warn("apply: illegal method access: ", e);
-        } catch (InvocationTargetException e) {
-          Log.warn("apply: method invoke: ", e);
-        }
+    // Valid session cache: loop and call supplied Visitor method
+    for (Session nextSession : sessions.values()) {
+      // Session cache may not be entirely filled
+      if (nextSession == null) {
+        break;
       }
-    
+
+      try {
+        // First argument is always a Session object
+        args[0] = nextSession;
+
+        // Use Java reflection to call the method passed by the Visitor
+        method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
+      } catch (IllegalAccessException e) {
+        Log.warn("apply: illegal method access: ", e);
+      } catch (InvocationTargetException e) {
+        Log.warn("apply: method invoke: ", e);
+      }
+    }
+
     //@wjw_add 在查找本地没有,而redis有的其他节点上的session
-    java.util.Set<byte[]> sessionsSet = redis.keys(Session.REDIS_SESSION_PREFIX+"*");
+    java.util.Set<byte[]> sessionsSet = redis.keys(Session.REDIS_SESSION_PREFIX + "*");
     String tempSessionId;
     Session tempSession;
-    for(byte[] bb : sessionsSet) {
+    for (byte[] bb : sessionsSet) {
       try {
-        tempSessionId = new String(bb,redis.REDIS_CHARSET);
+        tempSessionId = new String(bb, redis.REDIS_CHARSET);
         tempSessionId = tempSessionId.substring(Session.REDIS_SESSION_PREFIX.length());
-        if(sessions.containsKey(tempSessionId)==false) {
+        if (sessions.containsKey(tempSessionId) == false) {
           tempSession = Session.create(tempSessionId);
           tempSession.getSubscriber().setActive(true);
 
@@ -139,7 +134,7 @@ public class SessionManager implements ConfigDefs {
   /**
    * Get Session by session id.
    */
-  public Session getSession(boolean canAdd,String anId) {
+  public Session getSession(boolean canAdd, String anId) {
     Session tmpSession = (Session) sessions.get(anId);
 
     //@wjw_add 再从redis里查询是否有此anId的session
@@ -147,7 +142,7 @@ public class SessionManager implements ConfigDefs {
       try {
         tmpSession = Session.create(anId);
         tmpSession.getSubscriber().setActive(true);
-        if(canAdd) {
+        if (canAdd) {
           this.addSession(tmpSession);
         }
       } catch (PushletException e) {
@@ -258,21 +253,15 @@ public class SessionManager implements ConfigDefs {
 
     // Other cases use random name
 
-    // Create a unique session id
-    // In 99.9999 % of the cases this should be generated at once
-    // We need the mutext to prevent the chance of creating
-    // same-valued ids (thanks Uli Romahn)
-    synchronized (mutex) {
-      String id;
-      while (true) {
-        id = Rand.randomName(Config.getIntProperty(SESSION_ID_SIZE));
-        if (!hasSession(id)) {
-          // Created unique session id
-          break;
-        }
+    String id;
+    while (true) {
+      id = Rand.randomName(Config.getIntProperty(SESSION_ID_SIZE));
+      if (!hasSession(id)) {
+        // Created unique session id
+        break;
       }
-      return id;
     }
+    return id;
   }
 
   /**
@@ -347,4 +336,3 @@ public class SessionManager implements ConfigDefs {
     }
   }
 }
-

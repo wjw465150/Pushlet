@@ -3,12 +3,13 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.util.Log;
-
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
+
+import javax.servlet.http.HttpServletResponse;
+
+import nl.justobjects.pushlet.util.Log;
 
 /**
  * Generic implementation of ClientAdapter for browser clients.

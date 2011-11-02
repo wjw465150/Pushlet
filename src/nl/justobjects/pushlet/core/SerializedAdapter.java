@@ -3,9 +3,10 @@
 
 package nl.justobjects.pushlet.core;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Implementation of ClientAdapter that sends Events as serialized objects.

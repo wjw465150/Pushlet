@@ -3,21 +3,27 @@
 
 package nl.justobjects.pushlet.servlet;
 
-import nl.justobjects.pushlet.core.*;
-import nl.justobjects.pushlet.util.Log;
-import nl.justobjects.pushlet.util.Servlets;
-import nl.justobjects.pushlet.util.PushletException;
-import nl.justobjects.pushlet.Version;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Enumeration;
+import nl.justobjects.pushlet.Version;
+import nl.justobjects.pushlet.core.Command;
+import nl.justobjects.pushlet.core.Config;
+import nl.justobjects.pushlet.core.Dispatcher;
+import nl.justobjects.pushlet.core.Event;
+import nl.justobjects.pushlet.core.EventParser;
+import nl.justobjects.pushlet.core.EventSourceManager;
+import nl.justobjects.pushlet.core.Protocol;
+import nl.justobjects.pushlet.core.Session;
+import nl.justobjects.pushlet.core.SessionManager;
+import nl.justobjects.pushlet.util.Log;
+import nl.justobjects.pushlet.util.Servlets;
 
 /**
  * Servlet runs a Subscriber per request.
@@ -175,7 +181,7 @@ public class Pushlet extends HttpServlet implements Protocol {
         }
 
         // We have an id: get the session object
-        session = SessionManager.getInstance().getSession(true,id);
+        session = SessionManager.getInstance().getSession(true, id);
 
         // Check for invalid id
         if (session == null) {

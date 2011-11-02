@@ -3,17 +3,19 @@
 
 package nl.justobjects.pushlet.client;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Map;
+
 import nl.justobjects.pushlet.core.Event;
 import nl.justobjects.pushlet.core.EventParser;
 import nl.justobjects.pushlet.core.Protocol;
 import nl.justobjects.pushlet.util.PushletException;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.OutputStream;
-import java.net.*;
-import java.util.Map;
 
 /**
  * Client API for Java HTTP client applets or apps.
