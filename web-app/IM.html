@@ -27,6 +27,18 @@
     //在线用户  里面装的就是树节点（的引用）
     onlines = new Array();
     
+		function onError(event) {  //@wjw_add 防止网络断线等问题引起的非正常断开
+      PL.state = PL.STATE_READY;
+      joinListen();
+
+      var t=new Ext.ToolTip({
+              target: 'mainUI',
+              dismissDelay: 30000 ,
+              html: PL.statusMsg
+          });
+      t.showAt([50,80]);
+		}
+		
     // Pushlet Event Callback from Server
     function onEvent(event) {
         //如果是登陆的消息 并且不是自己发出的 并且 树中没有这个id的节点
