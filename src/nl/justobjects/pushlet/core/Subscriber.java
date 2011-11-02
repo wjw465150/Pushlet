@@ -43,11 +43,6 @@ public class Subscriber implements Protocol, ConfigDefs {
   private EventQueue eventQueue;
 
   /**
-   * Map of active subscriptions, keyed by their subscription id.
-   */
-  //private Map subscriptions = Collections.synchronizedMap(new HashMap(3));
-
-  /**
    * Are we able to accept/send events ?.
    */
   private volatile boolean active;

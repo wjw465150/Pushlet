@@ -3,17 +3,20 @@
 
 package nl.justobjects.pushlet.core;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.rmi.server.UID;
+import java.util.Date;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+
 import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Rand;
 import nl.justobjects.pushlet.util.Sys;
-
-import java.rmi.server.UID;
-import java.util.*;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Manages lifecycle of Sessions.
@@ -49,18 +52,7 @@ public class SessionManager implements ConfigDefs {
   /**
    * Map of active sessions, keyed by their id, all access is through mutex.
    */
-  private Map sessions = new HashMap(13);
-
-  /**
-   * Cache of Sessions for iteration and to allow concurrent modification.
-   */
-  private Session[] sessionCache = new Session[0];
-
-  /**
-   * State of SessionCache, becomes true whenever sessionCache out of sync with
-   * sessions Map.
-   */
-  private boolean sessionCacheDirty = false;
+  private Map<String,Session> sessions = new ConcurrentHashMap<String,Session>(13);
 
   /**
    * Lock for any operation on Sessions (Session Map and/or -cache).
@@ -88,28 +80,8 @@ public class SessionManager implements ConfigDefs {
    *          Session object
    */
   public void apply(Object visitor, Method method, Object[] args) { //TODO@ 细看 Visitor pattern implementation for Session iteration
-    synchronized (mutex) {
-
-      // Refresh Session cache if required
-      // We use a cache for two reasons:
-      // 1. to prevent concurrent modification from within visitor method
-      // 2. some optimization (vs setting up Iterator for each apply()
-      if (sessionCacheDirty) {
-        // Clear out existing cache
-        for (int i = 0; i < sessionCache.length; i++) {
-          sessionCache[i] = null;
-        }
-
-        // Refill cache and update state
-        sessionCache = (Session[]) sessions.values().toArray(sessionCache);
-        sessionCacheDirty = false;
-      }
-
       // Valid session cache: loop and call supplied Visitor method
-      Session nextSession;
-      for (int i = 0; i < sessionCache.length; i++) {
-        nextSession = sessionCache[i];
-
+      for (Session nextSession : sessions.values()) {
         // Session cache may not be entirely filled
         if (nextSession == null) {
           break;
@@ -127,7 +99,6 @@ public class SessionManager implements ConfigDefs {
           Log.warn("apply: method invoke: ", e);
         }
       }
-    }
     
     //@wjw_add 在查找本地没有,而redis有的其他节点上的session
     java.util.Set<byte[]> sessionsSet = redis.keys(Session.REDIS_SESSION_PREFIX+"*");
@@ -169,43 +140,37 @@ public class SessionManager implements ConfigDefs {
    * Get Session by session id.
    */
   public Session getSession(boolean canAdd,String anId) {
-    synchronized (mutex) {
-      Session tmpSession = (Session) sessions.get(anId);
+    Session tmpSession = (Session) sessions.get(anId);
 
-      //@wjw_add 再从redis里查询是否有此anId的session
-      if (tmpSession == null && redis.exists(Session.REDIS_SESSION_PREFIX + anId)) {
-        try {
-          tmpSession = Session.create(anId);
-          tmpSession.getSubscriber().setActive(true);
-          if(canAdd) {
-            this.addSession(tmpSession);
-          }
-        } catch (PushletException e) {
-          tmpSession = null;
-          Log.warn(e.getMessage());
+    //@wjw_add 再从redis里查询是否有此anId的session
+    if (tmpSession == null && redis.exists(Session.REDIS_SESSION_PREFIX + anId)) {
+      try {
+        tmpSession = Session.create(anId);
+        tmpSession.getSubscriber().setActive(true);
+        if(canAdd) {
+          this.addSession(tmpSession);
         }
+      } catch (PushletException e) {
+        tmpSession = null;
+        Log.warn(e.getMessage());
       }
-
-      return tmpSession;
     }
+
+    return tmpSession;
   }
 
   /**
    * Get copy of listening Sessions.
    */
   public Session[] getSessions() {
-    synchronized (mutex) {
-      return (Session[]) sessions.values().toArray(new Session[0]);
-    }
+    return (Session[]) sessions.values().toArray(new Session[0]);
   }
 
   /**
    * Get number of listening Sessions.
    */
   public int getSessionCount() {
-    synchronized (mutex) {
-      return sessions.size();
-    }
+    return sessions.size();
   }
 
   /**
@@ -225,20 +190,15 @@ public class SessionManager implements ConfigDefs {
    * Is Session present?.
    */
   public boolean hasSession(String anId) {
-    synchronized (mutex) {
-      return sessions.containsKey(anId);
-    }
+    return sessions.containsKey(anId);
   }
 
   /**
    * Add session.
    */
   public void addSession(Session session) {
-    synchronized (mutex) {
-      sessions.put(session.getId(), session);
-      sessionCacheDirty = true;
-    }
-    // log(session.getId() + " at " + session.getAddress() + " adding ");
+    sessions.put(session.getId(), session);
+
     info(session.getId() + " at " + session.getAddress() + " added ");
   }
 
@@ -246,14 +206,11 @@ public class SessionManager implements ConfigDefs {
    * Register session for removal.
    */
   public Session removeSession(Session aSession) {
-    synchronized (mutex) {
-      Session session = (Session) sessions.remove(aSession.getId());
-      if (session != null) {
-        info(session.getId() + " at " + session.getAddress() + " removed ");
-      }
-      sessionCacheDirty = true;
-      return session;
+    Session session = (Session) sessions.remove(aSession.getId());
+    if (session != null) {
+      info(session.getId() + " at " + session.getAddress() + " removed ");
     }
+    return session;
   }
 
   /**
@@ -276,16 +233,15 @@ public class SessionManager implements ConfigDefs {
       timer.cancel();
       timer = null;
     }
-    synchronized (mutex) {
-      //->@wjw_add 原作者在停止SessionManager时没有销毁session,在使用redis持久化时会残留垃圾信息.
-      Session[] arraySession = getSessions();
-      for (Session ss : arraySession) {
-        ss.stop();
-      }
-      //<-@wjw_add
 
-      sessions.clear();
+    //->@wjw_add 原作者在停止SessionManager时没有销毁session,在使用redis持久化时会残留垃圾信息.
+    Session[] arraySession = getSessions();
+    for (Session ss : arraySession) {
+      ss.stop();
     }
+    //<-@wjw_add
+
+    sessions.clear();
     info("stopped");
   }
 
