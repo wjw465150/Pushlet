@@ -66,20 +66,27 @@ var PL = {
 	},
 
 /** Join. */
-	join: function() {
+	join: function(aSession_id) {
 		PL.sessionId = null;
+		if(aSession_id) {  //@wjw_add 
+      PL.sessionId = aSession_id;
+		}
 
 		// Streaming is only supported in Mozilla. E.g. IE does not allow access to responseText on readyState == 3
 		PL._doRequest('join', PL.NV_P_FORMAT + '&' + PL.NV_P_MODE);
 	},
 
 /** Join, listen and subscribe. */
-	joinListen: function(aSubject) {
+	joinListen: function(aSubject,aSession_id) {
 		PL._setStatus('join-listen ' + aSubject);
 		// PL.join();
 		// PL.listen(aSubject);
 
 		PL.sessionId = null;
+    if(aSession_id) {  //@wjw_add 
+      PL.sessionId = aSession_id;
+    }
+
 		// Create event URI for listen
 		var query = PL.NV_P_FORMAT + '&' + PL.NV_P_MODE;
 
@@ -645,8 +652,8 @@ function p_embed(thePushletWebRoot) {
 }
 
 // Join the pushlet server
-function p_join() {
-	PL.join();
+function p_join(aSession_id) {
+	PL.join(aSession_id);
 }
 
 // Create data event channel with the server
@@ -656,8 +663,8 @@ function p_listen(aSubject, aMode) {
 }
 
 // Shorthand: Join the pushlet server and start listening immediately
-function p_join_listen(aSubject) {
-	PL.joinListen(aSubject);
+function p_join_listen(aSubject,aSession_id) {
+	PL.joinListen(aSubject,aSession_id);
 }
 
 // Leave the pushlet server

@@ -166,12 +166,9 @@ public class Pushlet extends HttpServlet implements Protocol {
           userAgent = "unknown";
         }
         session.setUserAgent(userAgent);
-
       } else { //查找服务端是否有此会话
-        // Must be a request for existing Session
-
         // Get sessionId
-        String id = anEvent.getField(P_ID);  //TODO@SNS 在SNS里是否在建立会话时,判断是否有p_id呢?
+        String id = anEvent.getField(P_ID);
 
         // We must have an id value
         if (id == null) {

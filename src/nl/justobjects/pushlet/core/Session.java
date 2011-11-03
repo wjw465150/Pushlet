@@ -24,7 +24,6 @@ public class Session implements Protocol, ConfigDefs {
 
   private String userAgent;
   private long LEASE_TIME_MILLIS = Config.getLongProperty(SESSION_TIMEOUT_MINS) * 60 * 1000;
-  private volatile long timeToLive = LEASE_TIME_MILLIS;
 
   public static String[] FORCED_PULL_AGENTS = Config.getProperty(LISTEN_FORCE_PULL_AGENTS).split(",");
 
@@ -32,7 +31,11 @@ public class Session implements Protocol, ConfigDefs {
   private String format = FORMAT_XML;
 
   private String id;
-  private long birthday = System.currentTimeMillis(); //session的创建时间
+  private volatile long timeToLive = LEASE_TIME_MILLIS; //@wjw_node session会话的timeout时间
+  //@wjw_node session的创建时间,在用户join时用当前系统时间更新,
+  private long createDate = System.currentTimeMillis();
+  //@wjw_node SessionManager.AgingTimerTask里根据temporary属性的值来决定是否清除悬挂的session.
+  private boolean temporary = true; //@wjw_node 标志session是否是临时的
 
   /**
    * Protected constructor as we create through factory method.
@@ -99,8 +102,17 @@ public class Session implements Protocol, ConfigDefs {
     return id;
   }
 
-  public long getBirthday() {
-    return birthday;
+  public long getCreateDate() {
+    return createDate;
+  }
+
+  public boolean isTemporary() {
+    return temporary;
+  }
+
+  public void setTemporary(boolean temporary) {
+    this.temporary = temporary;
+    redis.hset(myHkey, "temporary", String.valueOf(temporary));
   }
 
   /**
@@ -203,8 +215,10 @@ public class Session implements Protocol, ConfigDefs {
     Log.debug("S-" + this + ": " + s);
   }
 
+  @Override
   public String toString() {
-    return getAddress() + "[" + getId() + "]";
+    return "Session [timeToLive=" + timeToLive + ", address=" + address + ", format=" + format + ", id=" + id
+        + ", createDate=" + createDate + ", temporary=" + temporary + "]";
   }
 
   public boolean isPersistence() {
@@ -215,7 +229,8 @@ public class Session implements Protocol, ConfigDefs {
     if (userAgent != null) {
       redis.hset(myHkey, "userAgent", userAgent);
     }
-    redis.hset(myHkey, "birthday", String.valueOf(birthday));
+    redis.hset(myHkey, "createDate", String.valueOf(createDate));
+    redis.hset(myHkey, "temporary", String.valueOf(temporary));
     redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
     if (address != null) {
       redis.hset(myHkey, "address", address);
@@ -228,9 +243,13 @@ public class Session implements Protocol, ConfigDefs {
   public void readStatus() {
     String tmpStr;
     userAgent = redis.hget(myHkey, "userAgent");
-    tmpStr = redis.hget(myHkey, "birthday");
+    tmpStr = redis.hget(myHkey, "createDate");
     if (tmpStr != null) {
-      birthday = Long.parseLong(tmpStr);
+      createDate = Long.parseLong(tmpStr);
+    }
+    tmpStr = redis.hget(myHkey, "temporary");
+    if (tmpStr != null) {
+      temporary = Boolean.parseBoolean(tmpStr);
     }
     tmpStr = redis.hget(myHkey, "timeToLive");
     if (tmpStr != null) {

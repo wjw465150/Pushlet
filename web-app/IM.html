@@ -86,7 +86,7 @@
     //   /pushlet/ping  是为了与服务器保持心跳  知道服务器没死
     //   /user/login  登陆信息  /user/login  聊天信息
     function joinListen() {
-        PL.joinListen('/pushlet/ping,/user/login,/user/chat');
+        PL.joinListen('/pushlet/ping,/user/login,/user/chat',username);
     }
    
    //借助一定周期的RefreshAck事件  发送我的在线信息  

@@ -120,8 +120,13 @@ public class SessionManager implements ConfigDefs {
    * Create new Session (but add later).
    */
   public Session createSession(Event anEvent) throws PushletException {
-    // Trivial
-    return Session.create(createSessionId());
+    if (anEvent.getField(Protocol.P_ID) == null) {
+      return Session.create(createSessionId());
+    } else {
+      Session session = Session.create(anEvent.getField(Protocol.P_ID));
+      session.setTemporary(false);  //说明不是临时会话
+      return session;
+    }
   }
 
   /**
@@ -326,8 +331,8 @@ public class SessionManager implements ConfigDefs {
         debug("AgingTimerTask: visit: " + aSession);
 
         // Stop session if lease expired
-        if (aSession.isExpired()) {
-          info("AgingTimerTask: Session expired: " + aSession);
+        if (aSession.isTemporary() && aSession.isExpired()) {
+          warn("AgingTimerTask: Session expired: " + aSession);
           aSession.stop();
         }
       } catch (Throwable t) {
