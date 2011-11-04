@@ -110,7 +110,7 @@
    }
    //发布上线信息
     function publish() {
-        PL.publish('/user/login', 'name='+username);
+        PL.publish_to_online('/user/login', 'name='+username);
     }
    //上线后马上发布我的上线信息
    function onJoinListenAck(event){

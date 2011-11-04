@@ -124,7 +124,7 @@ public class SessionManager implements ConfigDefs {
       return Session.create(createSessionId());
     } else {
       Session session = Session.create(anEvent.getField(Protocol.P_ID));
-      session.setTemporary(false);  //说明不是临时会话
+      session.setTemporary(false); //说明不是临时会话
       return session;
     }
   }
@@ -332,7 +332,10 @@ public class SessionManager implements ConfigDefs {
 
         // Stop session if lease expired
         if (aSession.isExpired()) {
-          info("AgingTimerTask: Session expired: " + aSession);
+          if (getInstance().hasSession(aSession.getId())) {
+            info("AgingTimerTask: Session expired: " + aSession);
+          }
+
           aSession.stop();
         }
       } catch (Throwable t) {

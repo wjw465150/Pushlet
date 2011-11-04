@@ -139,6 +139,11 @@ public interface Protocol {
    */
   public static final String E_PUBLISH = "publish";
 
+  /** @wjw_add 发布消息给在线用户
+   * C-->S Publish to subject to online session.
+   */
+  public static final String E_PUBLISH_TO_ONLINE = "publish_to_online";
+
   /**
    * S-->C Publish to subject acknowledge.
    */

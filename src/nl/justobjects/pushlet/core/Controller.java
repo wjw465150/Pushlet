@@ -84,7 +84,11 @@ public class Controller implements Protocol, ConfigDefs {
         doHeartbeat(aCommand);
       } else if (eventType.equals(Protocol.E_PUBLISH)) {
         // Publish event
-        doPublish(aCommand);
+        doPublish(aCommand,false);
+      } else if (eventType.equals(Protocol.E_PUBLISH_TO_ONLINE)) {  //@wjw_add 发布消息给在线用户
+        // Publish event
+        aCommand.reqEvent.setField(E_PUBLISH_TO_ONLINE, "true");
+        doPublish(aCommand,true);
       } else if (eventType.equals(Protocol.E_LISTEN)) {
         // Listen to pushed events
         doListen(aCommand);
@@ -279,7 +283,7 @@ public class Controller implements Protocol, ConfigDefs {
   /**
    * Handle Publish request.
    */
-  protected void doPublish(Command aCommand) {
+  protected void doPublish(Command aCommand,boolean aToOnline) {
     Event responseEvent = null;
 
     try {

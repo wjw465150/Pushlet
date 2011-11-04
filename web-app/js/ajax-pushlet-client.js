@@ -129,6 +129,17 @@ var PL = {
 		PL._doRequest('publish', query);
 	},
 
+/** Publish to subject 给在线用户. */
+  publish_to_online: function(aSubject, theQueryArgs) {
+
+    var query = 'p_subject=' + aSubject;
+    if (theQueryArgs) {
+      query = query + '&' + theQueryArgs;
+    }
+
+    PL._doRequest('publish_to_online', query);
+  },
+	
 /** Subscribe to (comma separated) subject(s). */
 	subscribe: function(aSubject, aLabel) {
 
@@ -691,6 +702,22 @@ function p_publish(aSubject, nvPairs) {
 		query = query + amp + args[i] + '=' + args[++i];
 	}
 	PL.publish(aSubject, query);
+}
+
+// Publish to a subject 给在线用户
+function p_publish_to_online(aSubject, nvPairs) {
+  var args = p_publish.arguments;
+
+  // Put the arguments' name/value pairs in the URI
+  var query = '';
+  var amp = '';
+  for (var i = 1; i < args.length; i++) {
+    if (i > 1) {
+      amp = '&';
+    }
+    query = query + amp + args[i] + '=' + args[++i];
+  }
+  PL.publish_to_online(aSubject, query);
 }
 
 // Subscribe to a subject with optional label
