@@ -99,11 +99,6 @@ public class Subscriber implements Protocol, ConfigDefs {
     }
   }
 
-  //@wjw_node 在出现意外情况时,被调用,在此方法里停止session
-  public void bailout() {
-    session.stop();
-  }
-
   /**
    * Are we still active to handle events.
    */
@@ -244,7 +239,7 @@ public class Subscriber implements Protocol, ConfigDefs {
         return;
       }
     } catch (Throwable t) {
-      bailout();
+      session.stop();
       return;
     }
 
@@ -272,7 +267,7 @@ public class Subscriber implements Protocol, ConfigDefs {
         events = eventQueue.deQueueAll(queueReadTimeoutMillis);
       } catch (InterruptedException ie) {
         warn("interrupted");
-        bailout();
+        session.stop();
       }
 
       // Send heartbeat when no events received
@@ -289,7 +284,7 @@ public class Subscriber implements Protocol, ConfigDefs {
         // Check for abort event
         if (events[i].getEventType().equals(E_ABORT)) {
           warn("Aborting Subscriber");
-          bailout();
+          session.stop();
         }
 
         // Push next Event to client
@@ -300,7 +295,7 @@ public class Subscriber implements Protocol, ConfigDefs {
           // Push to client through client adapter
           clientAdapter.push(events[i]);
         } catch (Throwable t) {
-          bailout();
+          session.stop();
           return;
         }
       }
@@ -344,7 +339,7 @@ public class Subscriber implements Protocol, ConfigDefs {
     long now = Sys.now();
     if (now - lastAlive > refreshTimeoutMillis) {
       warn("not alive for at least: " + refreshTimeoutMillis + "ms, leaving...");
-      bailout();
+      session.stop();
       return;
     }
 
@@ -352,13 +347,13 @@ public class Subscriber implements Protocol, ConfigDefs {
     try {
       if (!eventQueue.enQueue(theEvent, queueWriteTimeoutMillis)) {
         warn("queue full, bailing out...");
-        bailout(); //TODO@ 是否要忽略此类异常???
+        session.stop();
       }
 
       // ASSERTION : Event in queue.
       // see fetchEvents() where Events are dequeued and pushed to the client.
     } catch (InterruptedException ie) {
-      bailout();
+      session.stop();
     }
 
   }
@@ -381,7 +376,7 @@ public class Subscriber implements Protocol, ConfigDefs {
       aClientAdapter.stop();
     } catch (Throwable t) {
       // Leave on any exception
-      bailout();
+      session.stop();
     }
   }
 

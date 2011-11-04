@@ -331,8 +331,8 @@ public class SessionManager implements ConfigDefs {
         debug("AgingTimerTask: visit: " + aSession);
 
         // Stop session if lease expired
-        if (aSession.isTemporary() && aSession.isExpired()) {
-          warn("AgingTimerTask: Session expired: " + aSession);
+        if (aSession.isExpired()) {
+          info("AgingTimerTask: Session expired: " + aSession);
           aSession.stop();
         }
       } catch (Throwable t) {
