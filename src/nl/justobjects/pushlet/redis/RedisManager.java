@@ -235,7 +235,7 @@ public class RedisManager {
         jedis = _pool.getResource();
         return jedis.del(key.getBytes(REDIS_CHARSET));
       } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return 0L;
       } finally {
         if (jedis != null) {
           try {
@@ -252,7 +252,7 @@ public class RedisManager {
         Jedis jedisA = jedis.getShard(bytesKey);
         return jedisA.del(bytesKey);
       } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return 0L;
       } finally {
         if (jedis != null) {
           try {

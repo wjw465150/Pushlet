@@ -187,8 +187,9 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void stop() {
-    //TODO@SNS wjw考虑在社交环境中,pushlet会话停止而要保留此会话的Subscriber,Controll,EventQueue等所有数据?
-    redis.del(myHkey);
+    if(this.temporary) {
+      redis.del(myHkey);
+    }
 
     subscriber.stop();
     SessionManager.getInstance().removeSession(this);

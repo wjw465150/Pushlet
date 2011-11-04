@@ -74,7 +74,7 @@ public class SessionManager implements ConfigDefs {
    *          arguments to be passed in visit method, args[0] will always be
    *          Session object
    */
-  public void apply(Object visitor, Method method, Object[] args) { //TODO@ 细看 Visitor pattern implementation for Session iteration
+  public void apply(Object visitor, Method method, Object[] args) {
     // Valid session cache: loop and call supplied Visitor method
     for (Session nextSession : sessions.values()) {
       // Session cache may not be entirely filled
@@ -105,7 +105,7 @@ public class SessionManager implements ConfigDefs {
         tempSessionId = tempSessionId.substring(Session.REDIS_SESSION_PREFIX.length());
         if (sessions.containsKey(tempSessionId) == false) {
           tempSession = Session.create(tempSessionId);
-          tempSession.getSubscriber().setActive(true);
+          tempSession.getSubscriber().start();
 
           args[0] = tempSession;
           method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
@@ -146,7 +146,7 @@ public class SessionManager implements ConfigDefs {
     if (tmpSession == null && redis.exists(Session.REDIS_SESSION_PREFIX + anId)) {
       try {
         tmpSession = Session.create(anId);
-        tmpSession.getSubscriber().setActive(true);
+        tmpSession.getSubscriber().start();
         if (canAdd) {
           this.addSession(tmpSession);
         }

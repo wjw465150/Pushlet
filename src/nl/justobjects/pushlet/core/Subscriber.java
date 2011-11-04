@@ -84,24 +84,22 @@ public class Subscriber implements Protocol, ConfigDefs {
     return subscriber;
   }
 
-  public void setActive(boolean status) {
-    active = status;
-  }
-
   public void start() {
     active = true;
   }
 
   public void stop() {
-    eventQueue.clear(); //@wjw_add 在停止时要清除事件队列
-
-    redis.del(myHkey); //清除redis里的subscriber
-    removeSubscriptions(); //清除redis里的subscriptions
     active = false;
+
+    if (session.isTemporary()) {
+      eventQueue.clear(); //@wjw_add 在停止时要清除事件队列
+
+      redis.del(myHkey); //清除redis里的subscriber
+      removeSubscriptions(); //清除redis里的subscriptions
+    }
   }
 
   //@wjw_node 在出现意外情况时,被调用,在此方法里停止session
-  //TODO@SNS 在处理SNS时,应该屏蔽
   public void bailout() {
     session.stop();
   }
