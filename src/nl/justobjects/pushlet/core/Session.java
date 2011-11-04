@@ -187,6 +187,9 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void stop() {
+    timeToLive = 0;
+    redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
+
     if(this.temporary) {
       redis.del(myHkey);
     }

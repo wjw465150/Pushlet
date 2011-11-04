@@ -326,11 +326,15 @@ public class Subscriber implements Protocol, ConfigDefs {
   /**
    * Event from Dispatcher: enqueue it.
    */
-  public void onEvent(Event theEvent) {
+  public void onEvent(Event theEvent) {  //TODO@!!! 怎样过滤给不在线的用户发送事件,以防止事件队列满???
     if (!isActive()) {
       return;
     }
 
+???    if(session.isExpired() && theEvent.getSubject().equalsIgnoreCase("/user/login")) {
+      return;
+    }
+    
     // p("send: queue event: "+theEvent.getSubject());
 
     // Check if we had any active continuation for at
