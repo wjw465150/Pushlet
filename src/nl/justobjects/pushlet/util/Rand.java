@@ -5,6 +5,7 @@ package nl.justobjects.pushlet.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
 import java.util.Random;
 
 /**
@@ -128,17 +129,42 @@ public class Rand {
     return "" + randomLong();
   }
 
+  /**
+   * 把字符串转化成MD5
+   * @param inStr 需转换的字符串
+   * @return 转换成MD5后的输出字符串
+   * @throws RuntimeException 当发生错误时会抛出RuntimeException
+   */
+  public static String getMD5ofStr(String inStr) {
+    try {
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+      byte[] md5Bytes = md5.digest(inStr.getBytes());
+      return ByteArraytoHexString(md5Bytes, 0, md5Bytes.length);
+    } catch (Throwable thex) {
+      throw new RuntimeException(thex);
+    }
+  }
+
+  /**
+   * 把字节数组转换成16进制表示的字符串
+   * @param b 待转换的字节数组
+   * @param offset 起始偏移量,已0开始
+   * @param size 要转换的字节个数
+   * @return 转换后的16进制表示的字符串
+   */
+  public static String ByteArraytoHexString(byte[] b, int offset, int size) {
+    StringBuilder sb = new StringBuilder(2 * size);
+    int b1, b2;
+
+    for (int i = offset; i < size; i++) {
+      b1 = (b[i] >>> 4) & 0X0F;
+      sb.append(Integer.toHexString(b1).toUpperCase());
+      b2 = b[i] & 0X0F;
+      sb.append(Integer.toHexString(b2).toUpperCase());
+    }
+
+    return sb.toString();
+  }
+  
 }
 
-/*
- * $Log: Rand.java,v $ Revision 1.4 2007/12/07 12:57:40 justb added log4j and
- * make it the default logging method
- * 
- * Revision 1.3 2007/11/23 21:10:17 justb add hooks for custom logging (you can
- * override DefaultLogger in pushlet.properties)
- * 
- * Revision 1.2 2004/09/03 22:35:38 justb Almost complete rewrite, just checking
- * in now
- * 
- * Revision 1.1 2004/03/10 12:21:27 justb *** empty log message ***
- */
