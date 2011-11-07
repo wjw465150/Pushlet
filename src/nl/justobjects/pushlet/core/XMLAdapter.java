@@ -76,7 +76,9 @@ class XMLAdapter implements ClientAdapter {
 
     // Send the event as XML to the client and flush.
     out.print(anEvent.toXML(strictXML));
-    out.flush();
+    if (out.checkError()) {  //@wjw_add 把out.flush();改成 out.checkError(),才能判断客户端是否断掉
+      throw new IOException("client is broke:" + out);
+    }
   }
 
   /**
