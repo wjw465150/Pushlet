@@ -127,7 +127,7 @@
    }
    //发布上线信息
     function publish() {
-        PL.publish_to_online('/user/login', 'name='+username);
+        PL.publish_to_online('/user/login', 'name='+encodeURIComponent(username));
     }
    //上线后马上发布我的上线信息
    function onJoinListenAck(event){
@@ -164,7 +164,7 @@
                         var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
                         //替换回车符
                         smessage=smessage.replace(/\r\n/ig,node.id);
-                            PL.publish('/user/chat','p_to='+ node.id+ '&message='+ smessage);
+                            PL.publish('/user/chat','p_to='+ encodeURIComponent(node.id)+ '&message='+ encodeURIComponent(smessage));
                             //得到当前时间
                             var now = new Date()
                             var time = " " + now.getHours()
@@ -215,7 +215,7 @@
                         var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
                         //替换回车符
                         smessage=smessage.replace(/\r\n/ig,node.id);
-                            PL.publish('/user/chat','p_to='+ node.id+ '&message='+ smessage);
+                            PL.publish('/user/chat','p_to='+ encodeURIComponent(node.id)+ '&message='+ encodeURIComponent(smessage));
                             //得到当前时间
                             var now = new Date()
                             var time = " " + now.getHours()
