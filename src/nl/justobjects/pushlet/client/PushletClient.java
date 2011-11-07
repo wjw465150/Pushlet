@@ -120,6 +120,10 @@ public class PushletClient implements Protocol {
     }
   }
 
+  public String getId() {
+    return id;
+  }
+  
   /**
    * Join server, starts session.
    */
