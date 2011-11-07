@@ -27,6 +27,19 @@
     //在线用户  里面装的就是树节点（的引用）
     onlines = new Array();
     
+    function newExcitingAlerts() {
+      var oldTitle = document.title;
+      var msg = "New!";
+      var timeoutId = setInterval(function() {
+        document.title = document.title == msg ? ' ' : msg;
+      }, 1000);
+      window.onmousemove = function() {
+        clearInterval(timeoutId);
+        document.title = oldTitle;
+        window.onmousemove = null;
+      };
+    }   
+		
 		function onAbort(event) {
 			onError(event);
 		}
@@ -82,7 +95,7 @@
             //把新消息添加到历史信息栏
             Ext.get('cw_hw_' + node.id).dom.value += node.text
                     + '  ' + time + '   \n' + smessage + '\n\n';
-
+            newExcitingAlerts();
         }
     }
 
