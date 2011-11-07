@@ -62,7 +62,7 @@ public class PushletApplet extends Applet implements PushletClientListener, Prot
       pushletClient.join();
       p("Joined server");
 
-      pushletClient.listen(this, PUSH_MODE);
+      pushletClient.listen(true,this, PUSH_MODE);
       p("Listening in mode=" + PUSH_MODE);
 
       pushletClient.subscribe(subject);
@@ -104,7 +104,7 @@ public class PushletApplet extends Applet implements PushletClientListener, Prot
     if (pushletClient != null) {
       p("Stopping PushletClient");
       try {
-        pushletClient.leave();
+        pushletClient.leave(true);
       } catch (PushletException ignore) {
         p("Error during leave pe=" + ignore);
 

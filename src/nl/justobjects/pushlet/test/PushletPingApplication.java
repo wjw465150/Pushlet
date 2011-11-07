@@ -41,7 +41,7 @@ public class PushletPingApplication extends Thread implements PushletClientListe
       pushletClient = new PushletClient(host, port);
       pushletClient.setDebug(true);
       pushletClient.join();
-      pushletClient.listen(this, Protocol.MODE_STREAM);
+      pushletClient.listen(true,this, Protocol.MODE_STREAM);
 
       // Test subscribe/unsubscribe
       String subscriptionId = pushletClient.subscribe(SUBJECT);

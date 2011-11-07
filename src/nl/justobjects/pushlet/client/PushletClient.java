@@ -6,10 +6,12 @@ package nl.justobjects.pushlet.client;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.Map;
 
 import nl.justobjects.pushlet.core.Event;
@@ -34,6 +36,16 @@ import nl.justobjects.pushlet.util.PushletException;
  * @see nl.justobjects.pushlet.test.PushletPingApplication
  */
 public class PushletClient implements Protocol {
+  private static final String CHARSET = "UTF-8";
+
+  public static String encodeURI(String source) {
+    try {
+      return URLEncoder.encode(source, CHARSET);
+    } catch (UnsupportedEncodingException e) {
+      return source;
+    }
+  }
+
   /**
    * Pushlet URL.
    */
@@ -112,7 +124,17 @@ public class PushletClient implements Protocol {
    * Join server, starts session.
    */
   public void join() throws PushletException {
+    this.join(null);
+  }
+
+  /**
+   * Join server, starts session.
+   */
+  public void join(String aId) throws PushletException {
     Event event = new Event(E_JOIN);
+    if (aId != null) {
+      event.setField(P_ID, aId);
+    }
     event.setField(P_FORMAT, FORMAT_XML);
     Event response = doControl(event);
     throwOnNack(response);
@@ -124,8 +146,8 @@ public class PushletClient implements Protocol {
   /**
    * Leave server, stops session.
    */
-  public void leave() throws PushletException {
-    stopListen();
+  public void leave(boolean aUnsubscribe) throws PushletException {
+    stopListen(aUnsubscribe);
     throwOnInvalidSession();
     Event event = new Event(E_LEAVE);
     event.setField(P_ID, id);
@@ -138,27 +160,29 @@ public class PushletClient implements Protocol {
   /**
    * Open data channel.
    */
-  public void listen(PushletClientListener aListener) throws PushletException {
-    listen(aListener, MODE_STREAM);
+  public void listen(boolean aFirstUnsubscribe, PushletClientListener aListener) throws PushletException {
+    listen(aFirstUnsubscribe, aListener, MODE_STREAM);
   }
 
   /**
    * Open data channel in stream or push mode.
    */
-  public void listen(PushletClientListener aListener, String aMode) throws PushletException {
-    listen(aListener, aMode, null);
+  public void listen(boolean aFirstUnsubscribe, PushletClientListener aListener, String aMode) throws PushletException {
+    this.listen(aFirstUnsubscribe, aListener, aMode, null);
   }
 
   /**
    * Open data channel in stream or push mode with a subject.
    */
-  public void listen(PushletClientListener aListener, String aMode, String aSubject) throws PushletException {
+  public void listen(boolean aFirstUnsubscribe, PushletClientListener aListener, String aMode, String aSubject)
+      throws PushletException {
     throwOnInvalidSession();
-    stopListen();
+    stopListen(aFirstUnsubscribe);
 
-    String listenURL = pushletURL + "?" + P_EVENT + "=" + E_LISTEN + "&" + P_ID + "=" + id + "&" + P_MODE + "=" + aMode;
+    String listenURL = pushletURL + "?" + P_EVENT + "=" + E_LISTEN + "&" + P_ID + "=" + encodeURI(id) + "&" + P_MODE
+        + "=" + aMode;
     if (aSubject != null) {
-      listenURL = listenURL + "&" + P_SUBJECT + "=" + aSubject;
+      listenURL = listenURL + "&" + P_SUBJECT + "=" + encodeURI(aSubject);
     }
 
     // Start listener thread (sync call).
@@ -168,11 +192,27 @@ public class PushletClient implements Protocol {
   /**
    * Immediate listener: joins/subscribes and listens in one action.
    */
-  public void joinListen(PushletClientListener aListener, String aMode, String aSubject) throws PushletException {
-    stopListen();
+  public void joinListen(boolean aFirstUnsubscribe, PushletClientListener aListener, String aMode, String aSubject)
+      throws PushletException {
+    this.joinListen(null, aFirstUnsubscribe, aListener, aMode, aSubject);
+  }
+
+  /**
+   * Immediate listener: joins/subscribes and listens in one action.
+   */
+  public void joinListen(String aId, boolean aFirstUnsubscribe, PushletClientListener aListener, String aMode,
+      String aSubject) throws PushletException {
+    if (aId != null) {
+      this.id = aId;
+    }
+
+    stopListen(aFirstUnsubscribe);
 
     String listenURL = pushletURL + "?" + P_EVENT + "=" + E_JOIN_LISTEN + "&" + P_FORMAT + "=" + FORMAT_XML + "&"
-        + P_MODE + "=" + aMode + "&" + P_SUBJECT + "=" + aSubject;
+        + P_MODE + "=" + aMode + "&" + P_SUBJECT + "=" + encodeURI(aSubject);
+    if (aId != null) {
+      listenURL = listenURL + "&" + P_ID + "=" + encodeURI(aId);
+    }
 
     // Start listener thread (sync call).
     startDataEventListener(aListener, listenURL);
@@ -184,6 +224,18 @@ public class PushletClient implements Protocol {
   public void publish(String aSubject, Map theAttributes) throws PushletException {
     throwOnInvalidSession();
     Event event = new Event(E_PUBLISH, theAttributes);
+    event.setField(P_SUBJECT, aSubject);
+    event.setField(P_ID, id);
+    Event response = doControl(event);
+    throwOnNack(response);
+  }
+
+  /**
+   * @wjw_add Publish an event to online session through server.
+   */
+  public void publish_to_online(String aSubject, Map theAttributes) throws PushletException {
+    throwOnInvalidSession();
+    Event event = new Event(E_PUBLISH_TO_ONLINE, theAttributes);
     event.setField(P_SUBJECT, aSubject);
     event.setField(P_ID, id);
     Event response = doControl(event);
@@ -245,9 +297,11 @@ public class PushletClient implements Protocol {
   /**
    * Stop the listener.
    */
-  public void stopListen() throws PushletException {
+  public void stopListen(boolean aUnsubscribe) throws PushletException {
     if (dataEventListener != null) {
-      unsubscribe();
+      if (aUnsubscribe) {
+        unsubscribe();
+      }
       dataEventListener.stop();
       dataEventListener = null;
     }

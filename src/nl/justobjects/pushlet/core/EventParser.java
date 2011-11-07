@@ -140,21 +140,3 @@ public class EventParser {
     }
   }
 }
-
-/*
- * $Log: EventParser.java,v $ Revision 1.3 2007/11/23 14:33:07 justb core
- * classes now configurable through factory
- * 
- * Revision 1.2 2006/05/06 00:10:11 justb various chgs but not too serious...
- * 
- * Revision 1.1 2005/02/18 10:07:23 justb many renamings of classes (make names
- * compact)
- * 
- * Revision 1.3 2004/09/03 22:35:37 justb Almost complete rewrite, just checking
- * in now
- * 
- * Revision 1.2 2003/08/15 08:37:40 justb fix/add Copyright+LGPL file headers
- * and footers
- * 
- * Revision 1.1 2003/05/18 16:12:27 justb adding support for XML encoded Events
- */

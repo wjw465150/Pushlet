@@ -65,7 +65,7 @@ public class StressTester implements Protocol {
           pushletClient = new PushletClient(host, port);
           // pushletClient.setDebug(true);
           pushletClient.join();
-          pushletClient.listen(this, Protocol.MODE_STREAM);
+          pushletClient.listen(true,this, Protocol.MODE_STREAM);
           //p("listening");
           // Test subscribe/unsubscribe
           String subscriptionId = pushletClient.subscribe(SUBJECT);
@@ -77,7 +77,7 @@ public class StressTester implements Protocol {
           sleepRandom();
           //p("leaving");
           pushletClient.unsubscribe(subscriptionId);
-          pushletClient.leave();
+          pushletClient.leave(true);
 
         } catch (Throwable t) {
           err("Error in EventSubscriber t=" + t);

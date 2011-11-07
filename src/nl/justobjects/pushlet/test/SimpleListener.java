@@ -30,7 +30,7 @@ public class SimpleListener implements PushletClientListener, Protocol {
       PushletClient pushletClient = new PushletClient(aHost, aPort);
       pushletClient.setDebug(false);
       pushletClient.join();
-      pushletClient.listen(this, MODE, SUBJECT);
+      pushletClient.listen(true,this, MODE, SUBJECT);
       p("pushletClient started");
     } catch (PushletException pe) {
       p("Error in setting up pushlet session pe=" + pe);

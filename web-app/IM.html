@@ -27,6 +27,10 @@
     //在线用户  里面装的就是树节点（的引用）
     onlines = new Array();
     
+		function onAbort(event) {
+			onError(event);
+		}
+		
 		function onError(event) {  //@wjw_add 防止网络断线等问题引起的非正常断开
       PL.state = PL.STATE_READY;
       joinListen();
