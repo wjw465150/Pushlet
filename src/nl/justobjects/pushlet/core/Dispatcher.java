@@ -167,7 +167,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
         clonedEvent = (Event) event.clone();
 
         // Set subscription id and optional label
-        clonedEvent.setField(P_SUBSCRIPTION_ID, subscription.getId());
+        clonedEvent.setField(P_SUBSCRIPTION_ID, subscription.getSubject());
         if (subscription.getLabel() != null) {
           event.setField(P_SUBSCRIPTION_LABEL, subscription.getLabel());
         }

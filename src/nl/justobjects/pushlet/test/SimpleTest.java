@@ -14,7 +14,7 @@ import nl.justobjects.pushlet.util.PushletException;
 public class SimpleTest extends TimerTask implements PushletClientListener, Protocol {
   private static String SUBJECT = "/pushlet/ping,/user/login,/user/chat";
   private static final String MODE = MODE_STREAM;
-  private static final String myId = "admin";
+  private static final String myId = null;  //"admin";
 
   private PushletClient pushletClient;
   private Timer timer;

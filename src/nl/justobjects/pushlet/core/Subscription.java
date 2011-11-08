@@ -14,7 +14,6 @@ import nl.justobjects.pushlet.util.PushletException;
 public class Subscription implements ConfigDefs {
   public static final int ID_SIZE = 8;
   public static final String SUBJECT_SEPARATOR = ",";
-  private String id;
 
   private String subject; //@wjw_node 此字段不使用,而是使用subjects字段
   private String[] subjects; // We may subscribe to multiple subjects by separating
@@ -66,7 +65,6 @@ public class Subscription implements ConfigDefs {
     } catch (Throwable t) {
       throw new PushletException("Cannot instantiate Subscriber from config", t);
     }
-    subscription.id = aSubject; //@wjw_add 不能用随机id策略,防止redis里出现垃圾 
 
     // Init
     subscription.subject = aSubject;
@@ -79,10 +77,6 @@ public class Subscription implements ConfigDefs {
     return subscription;
   }
 
-  public String getId() {
-    return id;
-  }
-
   public String getLabel() {
     return label;
   }
@@ -91,25 +85,8 @@ public class Subscription implements ConfigDefs {
     return subject;
   }
 
-  /**
-   * Determine if Event matches subscription.
-   */
-  public boolean match(Event event) {
-    String eventSubject = event.getSubject();
-
-    // Silly case but check anyway
-    if (eventSubject == null || eventSubject.length() == 0) {
-      return false;
-    }
-
-    // Test if one of the subjects matches
-    for (int i = 0; i < subjects.length; i++) {
-      if (eventSubject.startsWith(subjects[i])) {
-        return true;
-      }
-    }
-
-    // No match
-    return false;
+  public String[] getSubjects() {
+    return subjects;
   }
+
 }

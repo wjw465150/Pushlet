@@ -259,7 +259,7 @@ public class Controller implements Protocol, ConfigDefs {
       Subscription subscription = getSubscriber().addSubscription(subject, label);
 
       // Add subscription id and optional label to listen-ack event
-      listenAckEvent.setField(P_SUBSCRIPTION_ID, subscription.getId());
+      listenAckEvent.setField(P_SUBSCRIPTION_ID, subscription.getSubject());
       if (label != null) {
         listenAckEvent.setField(P_SUBSCRIPTION_LABEL, label);
       }
@@ -353,11 +353,11 @@ public class Controller implements Protocol, ConfigDefs {
         responseEvent = new Event(E_SUBSCRIBE_ACK);
         responseEvent.setField(P_ID, session.getId());
         responseEvent.setField(P_SUBJECT, subject);
-        responseEvent.setField(P_SUBSCRIPTION_ID, subscription.getId());
+        responseEvent.setField(P_SUBSCRIPTION_ID, subscription.getSubject());
         if (label != null) {
           responseEvent.setField(P_SUBSCRIPTION_LABEL, label);
         }
-        info("subscribed to " + subject + " sid=" + subscription.getId());
+        info("subscribed to " + subject + " sid=" + subscription.getSubject());
       }
 
     } catch (Throwable t) {
@@ -398,7 +398,7 @@ public class Controller implements Protocol, ConfigDefs {
           // OK return ack
           responseEvent = new Event(E_UNSUBSCRIBE_ACK);
           responseEvent.setField(P_ID, session.getId());
-          responseEvent.setField(P_SUBSCRIPTION_ID, subscription.getId());
+          responseEvent.setField(P_SUBSCRIPTION_ID, subscription.getSubject());
           responseEvent.setField(P_SUBJECT, subscription.getSubject());
           if (subscription.getLabel() != null) {
             responseEvent.setField(P_SUBSCRIPTION_LABEL, subscription.getLabel());

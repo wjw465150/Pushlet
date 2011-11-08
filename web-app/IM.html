@@ -90,7 +90,7 @@
                                     + now.getSeconds() + "";
             //解码回车符  消息在发送的时候对回车符进行了替换 现在替换回来 否则在经过服务器的时候回车符会丢失
             var smessage = event.get('message');
-            var reg = new RegExp(PL.sessionId, "g"); // 创建正则RegExp对象
+            var reg = new RegExp("123===321", "g"); // 创建正则RegExp对象
             smessage = smessage.replace(reg, '\n');
             //把新消息添加到历史信息栏
             Ext.get('cw_hw_' + node.id).dom.value += node.text
@@ -163,7 +163,7 @@
                         //得到要发送的信息
                         var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
                         //替换回车符
-                        smessage=smessage.replace(/\r\n/ig,node.id);
+                        smessage=smessage.replace(/\n/ig,"123===321");
                             PL.publish('/user/chat','p_to='+ encodeURIComponent(node.id)+ '&message='+ encodeURIComponent(smessage));
                             //得到当前时间
                             var now = new Date()
@@ -214,7 +214,7 @@
                         //得到要发送的信息
                         var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
                         //替换回车符
-                        smessage=smessage.replace(/\r\n/ig,node.id);
+                        smessage=smessage.replace(/\n/ig,"123===321");
                             PL.publish('/user/chat','p_to='+ encodeURIComponent(node.id)+ '&message='+ encodeURIComponent(smessage));
                             //得到当前时间
                             var now = new Date()
