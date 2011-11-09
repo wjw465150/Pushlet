@@ -18,6 +18,8 @@
 		<script type="text/javascript" src="ext/ext-all-debug.js"></script>
 
 		<!-- DESKTOP -->
+    <!-- See www.jeremie.com, still the most lightweight XML parser... -->
+    <script type="text/javascript" src="js/xparse.js"></script>
 		<script type="text/javascript" src="js/ajax-pushlet-client.js"></script>
 		<script type="text/javascript" src="js/IMui.js"></script>
 		<script type="text/javascript">
@@ -90,8 +92,8 @@
                                     + now.getSeconds() + "";
             //解码回车符  消息在发送的时候对回车符进行了替换 现在替换回来 否则在经过服务器的时候回车符会丢失
             var smessage = event.get('message');
-            var reg = new RegExp("123===321", "g"); // 创建正则RegExp对象
-            smessage = smessage.replace(reg, '\n');
+            //var reg = new RegExp("\r", "g"); // 创建正则RegExp对象
+            //smessage = smessage.replace(reg, '\n');
             //把新消息添加到历史信息栏
             Ext.get('cw_hw_' + node.id).dom.value += node.text
                     + '  ' + time + '   \n' + smessage + '\n\n';
@@ -163,7 +165,7 @@
                         //得到要发送的信息
                         var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
                         //替换回车符
-                        smessage=smessage.replace(/\n/ig,"123===321");
+                        //smessage=smessage.replace(/\n/ig,"\r");
                             PL.publish('/user/chat','p_to='+ encodeURIComponent(node.id)+ '&message='+ encodeURIComponent(smessage));
                             //得到当前时间
                             var now = new Date()
@@ -214,7 +216,7 @@
                         //得到要发送的信息
                         var smessage=Ext.get('cw_iw_'+ node.id).dom.value;
                         //替换回车符
-                        smessage=smessage.replace(/\n/ig,"123===321");
+                        //smessage=smessage.replace(/\n/ig,"\r");
                             PL.publish('/user/chat','p_to='+ encodeURIComponent(node.id)+ '&message='+ encodeURIComponent(smessage));
                             //得到当前时间
                             var now = new Date()

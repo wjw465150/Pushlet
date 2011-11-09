@@ -338,12 +338,12 @@ function _strip(str)
 {
 	var A = new Array();
 
-	A = str.split("\n");
+	A = str.split("\f");
 	str = A.join("");
 	A = str.split(" ");
 	str = A.join("");
-	A = str.split("\t");
-	str = A.join("");
+	//A = str.split("\t");
+	//str = A.join("");
 
 	return str;
 }
@@ -356,10 +356,10 @@ function _normalize(str)
 {
 	var A = new Array();
 
-	A = str.split("\n");
+	A = str.split("\f");
 	str = A.join(" ");
-	A = str.split("\t");
-	str = A.join(" ");
+	//A = str.split("\t");
+	//str = A.join(" ");
 
 	return str;
 }

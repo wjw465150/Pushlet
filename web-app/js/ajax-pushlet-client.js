@@ -314,7 +314,7 @@ var PL = {
 				if (xmlhttp.readyState == 4) {
 					if (xmlhttp.status == 200) {
 						// Processing statements go here...
-						cb(xmlhttp.responseXML);
+						cb(Xparse(xmlhttp.responseText));
 
 						// Avoid memory leaks in IE
 						// 12.may.2007 thanks to Julio Santa Cruz
@@ -345,7 +345,7 @@ var PL = {
 			// Sync mode (no callback)
 			// alert(xmlhttp.responseText);
 
-			return xmlhttp.responseXML;
+			return Xparse(xmlhttp.responseText);
 		}
 	},
 
@@ -493,12 +493,12 @@ var PL = {
 /** Convert XML response to PushletEvent objects. */
 	_rsp2Events: function(xml) {
 		// check empty response or xml document
-		if (!xml || !xml.documentElement) {
+		if (!xml || !xml.contents) {
 			return null;
 		}
 
 		// Convert xml doc to array of PushletEvent objects
-		var eventElements = xml.documentElement.getElementsByTagName('event');
+		var eventElements = xml.contents[0].contents;  // XML document is parsed into tree of arrays, contents[0] is <pushlet> element
 		var events = new Array(eventElements.length);
 		for (i = 0; i < eventElements.length; i++) {
 			events[i] = new PushletEvent(eventElements[i]);
@@ -636,10 +636,10 @@ function PushletEvent(xml) {
 
 	// Optional XML element <event name="value" ... />
 	if (xml) {
-		// Put the attributes in Map
-		for (var i = 0; i < xml.attributes.length; i++) {
-			this.put(xml.attributes[i].name, xml.attributes[i].value);
-		}
+    // Put the attributes in Map
+		for (var p in xml.attributes) {
+      this.put(p, xml.attributes[p]);
+	  }
 	}
 }
 
