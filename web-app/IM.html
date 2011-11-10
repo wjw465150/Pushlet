@@ -45,7 +45,7 @@
           now.getSeconds() +
           "";
           //修改聊天历史框
-          Ext.get('cw_hw_' + node.id).dom.value += "\n<<< " + username + '  ' + time + '  \n' +
+          Ext.get('cw_hw_' + node.id).dom.value += "\n//@" + username + '  ' + time + '  \n' +
           Ext.get('cw_iw_' + node.id).dom.value;
           Ext.get('cw_hw_' + node.id).dom.scrollTop = Ext.get('cw_hw_' + node.id).dom.scrollHeight;
           //清空输入框
@@ -110,7 +110,7 @@
               //var reg = new RegExp("\r", "g"); // 创建正则RegExp对象
               //smessage = smessage.replace(reg, '\n');
               //把新消息添加到历史信息栏
-              Ext.get('cw_hw_' + node.id).dom.value += "\n>>> " + node.text +
+              Ext.get('cw_hw_' + node.id).dom.value += "\n//@" + node.text +
               '  ' +
               time +
               '   \n' +

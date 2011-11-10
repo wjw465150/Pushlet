@@ -96,6 +96,14 @@ public class SessionManager implements ConfigDefs {
         Log.warn("apply: method invoke: ", e);
       }
     }
+    
+    //@wjw_add 当服务器发出E_ABORT消息时,只发给当前节点的Session
+    if(args.length==2 && args[1] instanceof Event) {
+      Event event = (Event) args[1];
+      if(event.getEventType().equals(Protocol.E_ABORT)) {
+        return;
+      }
+    }
 
     //@wjw_add 在查找本地没有,而redis有的其他节点上的session
     // @wjw_note 方法1->分批获取所有redis里的session
@@ -108,6 +116,7 @@ public class SessionManager implements ConfigDefs {
       if (allSessions.size() == 0) {
         break;
       }
+      
       start = start + allSessions.size();
       for (byte[] bb : allSessions) {
         try {
