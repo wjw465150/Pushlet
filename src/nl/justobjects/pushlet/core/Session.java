@@ -190,8 +190,9 @@ public class Session implements Protocol, ConfigDefs {
     timeToLive = 0;
     redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
 
-    if(this.temporary) {
+    if (this.temporary) {
       redis.del(myHkey);
+      redis.lrem(SessionManager.REDIS_ALL_SESSION, 0, id);
     }
 
     subscriber.stop();
@@ -230,6 +231,11 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void saveStatus() {
+    //->先把ID放到键为"pushlet:all:session"的List里
+    redis.lrem(SessionManager.REDIS_ALL_SESSION, 0, id);
+    redis.lpush(SessionManager.REDIS_ALL_SESSION, id);
+    //<-先把ID放到键为"pushlet:all:session"的List里
+
     if (userAgent != null) {
       redis.hset(myHkey, "userAgent", userAgent);
     }

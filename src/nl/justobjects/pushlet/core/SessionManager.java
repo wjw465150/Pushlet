@@ -27,6 +27,8 @@ import nl.justobjects.pushlet.util.Sys;
 public class SessionManager implements ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
 
+  public static final String REDIS_ALL_SESSION = "pushlet:all:session";
+
   /**
    * Singleton pattern: single instance.
    */
@@ -96,24 +98,53 @@ public class SessionManager implements ConfigDefs {
     }
 
     //@wjw_add 在查找本地没有,而redis有的其他节点上的session
-    java.util.Set<byte[]> sessionsSet = redis.keys(Session.REDIS_SESSION_PREFIX + "*");
+    // @wjw_note 方法1->分批获取所有redis里的session
+    java.util.List<byte[]> allSessions = null;
+    int start = 0;
     String tempSessionId;
     Session tempSession;
-    for (byte[] bb : sessionsSet) {
-      try {
-        tempSessionId = new String(bb, redis.REDIS_CHARSET);
-        tempSessionId = tempSessionId.substring(Session.REDIS_SESSION_PREFIX.length());
-        if (sessions.containsKey(tempSessionId) == false) {
-          tempSession = Session.create(tempSessionId);
-          tempSession.getSubscriber().start();
+    while (true) {
+      allSessions = redis.lrange(REDIS_ALL_SESSION, start, start + 99);
+      if (allSessions.size() == 0) {
+        break;
+      }
+      start = start + allSessions.size();
+      for (byte[] bb : allSessions) {
+        try {
+          tempSessionId = new String(bb, RedisManager.REDIS_CHARSET);
+          if (sessions.containsKey(tempSessionId) == false) {
+            tempSession = Session.create(tempSessionId);
+            tempSession.getSubscriber().start();
 
-          args[0] = tempSession;
-          method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
+            args[0] = tempSession;
+            method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
+          }
+        } catch (Exception e) {
+          Log.warn("apply: method invoke: ", e);
         }
-      } catch (Exception e) {
-        Log.warn("apply: method invoke: ", e);
       }
     }
+
+    // @wjw_note 方法2->此获取所有redis里的session方法,太耗内存!
+    //    java.util.Set<byte[]> sessionsSet = redis.keys(Session.REDIS_SESSION_PREFIX + "*");
+    //    String tempSessionId;
+    //    Session tempSession;
+    //    for (byte[] bb : sessionsSet) {
+    //      try {
+    //        tempSessionId = new String(bb, redis.REDIS_CHARSET);
+    //        tempSessionId = tempSessionId.substring(Session.REDIS_SESSION_PREFIX.length());
+    //        if (sessions.containsKey(tempSessionId) == false) {
+    //          tempSession = Session.create(tempSessionId);
+    //          tempSession.getSubscriber().start();
+    //
+    //          args[0] = tempSession;
+    //          method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
+    //        }
+    //      } catch (Exception e) {
+    //        Log.warn("apply: method invoke: ", e);
+    //      }
+    //    }
+    
   }
 
   /**
