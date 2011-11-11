@@ -22,7 +22,7 @@ import nl.justobjects.pushlet.redis.RedisManager;
  */
 public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   static RedisManager redis = RedisManager.getInstance();
-  private static final String REDIS_EVENTQUEUE_PREFIX = "pushlet:eventqueue:";
+  private static final String PUSHLET_EVENTQUEUE_PREFIX = "p:eq:";
   private static final int SLEEP_TIME = 200;
 
   /**
@@ -45,7 +45,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   public EventQueue(String aSessionId, int capacity) {
     this.capacity = capacity;
 
-    myLkey = REDIS_EVENTQUEUE_PREFIX + aSessionId;
+    myLkey = PUSHLET_EVENTQUEUE_PREFIX + aSessionId;
   }
 
   /**

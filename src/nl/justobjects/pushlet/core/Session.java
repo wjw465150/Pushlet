@@ -16,7 +16,7 @@ import nl.justobjects.pushlet.util.Sys;
  */
 public class Session implements Protocol, ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
-  public static final String REDIS_SESSION_PREFIX = "pushlet:session:";
+  static final String PUSHLET_SESSION_PREFIX = "p:s:";
   private String myHkey;
 
   private Controller controller;
@@ -65,7 +65,7 @@ public class Session implements Protocol, ConfigDefs {
     session.controller = Controller.create(session);
     session.subscriber = Subscriber.create(session); //TODO@ 把Subscriber联系上Session
 
-    session.myHkey = REDIS_SESSION_PREFIX + session.id;
+    session.myHkey = PUSHLET_SESSION_PREFIX + session.id;
     if (session.isPersistence()) {
       session.readStatus();
     }
@@ -192,7 +192,7 @@ public class Session implements Protocol, ConfigDefs {
 
     if (this.temporary) {
       redis.del(myHkey);
-      redis.lrem(SessionManager.REDIS_ALL_SESSION, 0, id);
+      redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
     }
 
     subscriber.stop();
@@ -231,10 +231,10 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void saveStatus() {
-    //->先把ID放到键为"pushlet:all:session"的List里
-    redis.lrem(SessionManager.REDIS_ALL_SESSION, 0, id);
-    redis.lpush(SessionManager.REDIS_ALL_SESSION, id);
-    //<-先把ID放到键为"pushlet:all:session"的List里
+    //->先把ID放到键为"p:a:s"的List里
+    redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
+    redis.lpush(SessionManager.PUSHLET_ALL_SESSION, id);
+    //<-先把ID放到键为"p:a:s"的List里
 
     if (userAgent != null) {
       redis.hset(myHkey, "userAgent", userAgent);

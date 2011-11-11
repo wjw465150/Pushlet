@@ -659,7 +659,7 @@ function p_debug(aBool, aLabel, aMsg) {
 
 // Embed pushlet frame in page (OBSOLETE)
 function p_embed(thePushletWebRoot) {
-	alert('Pushlet: p_embed() is no longer required for AJAX client')
+	alert('Pushlets: p_embed() is no longer required for AJAX client')
 }
 
 // Join the pushlet server

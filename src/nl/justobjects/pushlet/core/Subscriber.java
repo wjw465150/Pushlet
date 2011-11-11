@@ -16,12 +16,12 @@ import nl.justobjects.pushlet.util.Sys;
  */
 public class Subscriber implements Protocol, ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
-  public static final String REDIS_SUBSCRIBER_PREFIX = "pushlet:subscriber:";
-  public static final String REDIS_SUBSCRIPTIONS_PREFIX = "pushlet:subscriptions:";
-  public static final String REDIS_SUBJECTS_PREFIX = "pushlet:subjects:";
+  private static final String PUSHLET_SUBSCRIBER_PREFIX = "p:sr:";
+  private static final String PUSHLET_SUBSCRIPTION_PREFIX = "p:sc:";
+  private static final String PUSHLET_SUBJECT_PREFIX = "p:sj:";
   private String myHkey;
-  private String subscriptionsHkey;
-  private String subjectsHkey;
+  private String subscriptionHkey;
+  private String subjectHkey;
 
   /**
    * URL to be used in refresh requests in pull/poll modes.
@@ -72,9 +72,9 @@ public class Subscriber implements Protocol, ConfigDefs {
     }
 
     subscriber.session = aSession;
-    subscriber.myHkey = REDIS_SUBSCRIBER_PREFIX + aSession.getId();
-    subscriber.subscriptionsHkey = REDIS_SUBSCRIPTIONS_PREFIX + aSession.getId();
-    subscriber.subjectsHkey = REDIS_SUBJECTS_PREFIX + aSession.getId();
+    subscriber.myHkey = PUSHLET_SUBSCRIBER_PREFIX + aSession.getId();
+    subscriber.subscriptionHkey = PUSHLET_SUBSCRIPTION_PREFIX + aSession.getId();
+    subscriber.subjectHkey = PUSHLET_SUBJECT_PREFIX + aSession.getId();
     subscriber.eventQueue = new EventQueue(aSession.getId(), Config.getIntProperty(QUEUE_SIZE));
 
     if (subscriber.isPersistence()) {
@@ -127,12 +127,12 @@ public class Subscriber implements Protocol, ConfigDefs {
   public Subscription addSubscription(String aSubject, String aLabel) throws PushletException {
     Subscription subscription = Subscription.create(aSubject, aLabel);
     String strSubscription = redis.toXML(subscription);
-    redis.hset(subscriptionsHkey, subscription.getSubject(), strSubscription);
+    redis.hset(subscriptionHkey, subscription.getSubject(), strSubscription);
 
     //把单个的subject存到redis的Hash表里,方便match查找
     String[] subjects = subscription.getSubjects();
     for (String oneSubject : subjects) {
-      redis.hset(subjectsHkey, oneSubject, strSubscription);
+      redis.hset(subjectHkey, oneSubject, strSubscription);
     }
 
     info("Subscription added subject=" + aSubject + " sid=" + subscription.getSubject() + " label=" + aLabel);
@@ -145,16 +145,16 @@ public class Subscriber implements Protocol, ConfigDefs {
   public Subscription removeSubscription(String aSubscriptionId) {
     Subscription subscription = null;
 
-    String strSubscription = redis.hget(subscriptionsHkey, aSubscriptionId);
+    String strSubscription = redis.hget(subscriptionHkey, aSubscriptionId);
     if (strSubscription == null) {
       subscription = null;
     } else {
       subscription = (Subscription) redis.fromXML(strSubscription);
-      redis.hdel(subscriptionsHkey, aSubscriptionId);
+      redis.hdel(subscriptionHkey, aSubscriptionId);
 
       String[] subjects = subscription.getSubjects();
       for (String oneSubject : subjects) {
-        redis.hdel(subjectsHkey, oneSubject);
+        redis.hdel(subjectHkey, oneSubject);
       }
     }
 
@@ -171,8 +171,8 @@ public class Subscriber implements Protocol, ConfigDefs {
    * Remove all subscriptions.
    */
   public void removeSubscriptions() {
-    redis.del(subscriptionsHkey);
-    redis.del(subjectsHkey);
+    redis.del(subscriptionHkey);
+    redis.del(subjectHkey);
   }
 
   public String getMode() {
@@ -312,7 +312,7 @@ public class Subscriber implements Protocol, ConfigDefs {
    * Determine if we should receive event.
    */
   public Subscription match(Event event) {
-    String strSubscription = redis.hget(subjectsHkey, event.getSubject());
+    String strSubscription = redis.hget(subjectHkey, event.getSubject());
     if (strSubscription == null) {
       return null;
     }

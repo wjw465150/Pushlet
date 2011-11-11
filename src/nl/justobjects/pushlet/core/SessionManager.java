@@ -27,7 +27,7 @@ import nl.justobjects.pushlet.util.Sys;
 public class SessionManager implements ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
 
-  public static final String REDIS_ALL_SESSION = "pushlet:all:session";
+  static final String PUSHLET_ALL_SESSION = "p:a:s";
 
   /**
    * Singleton pattern: single instance.
@@ -112,7 +112,7 @@ public class SessionManager implements ConfigDefs {
     String tempSessionId;
     Session tempSession;
     while (true) {
-      allSessions = redis.lrange(REDIS_ALL_SESSION, start, start + 99);
+      allSessions = redis.lrange(PUSHLET_ALL_SESSION, start, start + 99);
       if (allSessions.size() == 0) {
         break;
       }
@@ -135,13 +135,13 @@ public class SessionManager implements ConfigDefs {
     }
 
     // @wjw_note 方法2->此获取所有redis里的session方法,太耗内存!
-    //    java.util.Set<byte[]> sessionsSet = redis.keys(Session.REDIS_SESSION_PREFIX + "*");
+    //    java.util.Set<byte[]> sessionsSet = redis.keys(Session.PUSHLET_SESSION_PREFIX + "*");
     //    String tempSessionId;
     //    Session tempSession;
     //    for (byte[] bb : sessionsSet) {
     //      try {
     //        tempSessionId = new String(bb, redis.REDIS_CHARSET);
-    //        tempSessionId = tempSessionId.substring(Session.REDIS_SESSION_PREFIX.length());
+    //        tempSessionId = tempSessionId.substring(Session.PUSHLET_SESSION_PREFIX.length());
     //        if (sessions.containsKey(tempSessionId) == false) {
     //          tempSession = Session.create(tempSessionId);
     //          tempSession.getSubscriber().start();
@@ -183,7 +183,7 @@ public class SessionManager implements ConfigDefs {
     Session tmpSession = (Session) sessions.get(anId);
 
     //@wjw_add 再从redis里查询是否有此anId的session
-    if (tmpSession == null && redis.exists(Session.REDIS_SESSION_PREFIX + anId)) {
+    if (tmpSession == null && redis.exists(Session.PUSHLET_SESSION_PREFIX + anId)) {
       try {
         tmpSession = Session.create(anId);
         tmpSession.getSubscriber().start();

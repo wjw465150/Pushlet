@@ -104,7 +104,7 @@ public class Pushlet extends HttpServlet implements Protocol {
 
     } catch (Throwable t) {
       // Error creating event
-      Log.warn("Pushlet: Error creating event in doGet(): ", t);
+      Log.warn("Pushlets: Error creating event in doGet(): ", t);
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
@@ -134,7 +134,7 @@ public class Pushlet extends HttpServlet implements Protocol {
 
     } catch (Throwable t) {
       // Error creating event
-      Log.warn("Pushlet:  Error creating event in doPost(): ", t);
+      Log.warn("Pushlets:  Error creating event in doPost(): ", t);
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
@@ -173,7 +173,7 @@ public class Pushlet extends HttpServlet implements Protocol {
         // We must have an id value
         if (id == null) {
           response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No id specified");
-          Log.warn("Pushlet: bad request, no id specified event=" + eventType);
+          Log.warn("Pushlets: bad request, no id specified event=" + eventType);
           return;
         }
 
@@ -183,7 +183,7 @@ public class Pushlet extends HttpServlet implements Protocol {
         // Check for invalid id
         if (session == null) {
           response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid or expired id: " + id);
-          Log.warn("Pushlet:  bad request, no session found id=" + id + " event=" + eventType);
+          Log.warn("Pushlets:  bad request, no session found id=" + id + " event=" + eventType);
           return;
         }
       }
@@ -196,7 +196,7 @@ public class Pushlet extends HttpServlet implements Protocol {
       session.getController().doCommand(command);
     } catch (Throwable t) {
       // Hmm we should never ever get here
-      Log.warn("Pushlet:  Exception in doRequest() event=" + eventType, t);
+      Log.warn("Pushlets:  Exception in doRequest() event=" + eventType, t);
       t.printStackTrace();
       response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
