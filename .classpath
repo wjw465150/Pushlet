@@ -9,6 +9,6 @@
 	<classpathentry kind="var" path="TOMCAT_HOME/lib/jsp-api.jar"/>
 	<classpathentry kind="var" path="TOMCAT_HOME/lib/el-api.jar"/>
 	<classpathentry kind="var" path="TOMCAT_HOME/lib/annotations-api.jar"/>
-	<classpathentry kind="lib" path="thirdparty/wjw-redismanager.jar"/>
+	<classpathentry kind="lib" path="thirdparty/mongo-2.7.2.jar" sourcepath="E:/WJW_APP/Incubation/mongoDB/驱动/src/main"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

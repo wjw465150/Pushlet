@@ -3,7 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.redis.RedisManager;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
+
+import nl.justobjects.pushlet.mongodb.MongodbManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Sys;
@@ -15,9 +20,12 @@ import nl.justobjects.pushlet.util.Sys;
  * @version $Id: Session.java,v 1.8 2007/11/23 14:33:07 justb Exp $
  */
 public class Session implements Protocol, ConfigDefs {
-  static RedisManager redis = RedisManager.getInstance();
-  static final String PUSHLET_SESSION_PREFIX = "p:s:";
-  private String myHkey;
+  static MongodbManager mongo = MongodbManager.getInstance();
+  static final DBCollection _coll = mongo._db.getCollection("session");
+  static {
+    _coll.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.session', name: 'session_sessionId', unique: true}"));
+  }
+  private DBObject findPK;
 
   private Controller controller;
   private Subscriber subscriber;
@@ -62,10 +70,10 @@ public class Session implements Protocol, ConfigDefs {
 
     // Init session
     session.id = anId;
+    session.findPK = (DBObject) JSON.parse("{'sessionId': '" + session.id + "'}");
     session.controller = Controller.create(session);
     session.subscriber = Subscriber.create(session); //TODO@ 把Subscriber联系上Session
 
-    session.myHkey = PUSHLET_SESSION_PREFIX + session.id;
     if (session.isPersistence()) {
       session.readStatus();
     }
@@ -112,7 +120,7 @@ public class Session implements Protocol, ConfigDefs {
 
   public void setTemporary(boolean temporary) {
     this.temporary = temporary;
-    redis.hset(myHkey, "temporary", String.valueOf(temporary));
+    _coll.update(findPK, (DBObject) JSON.parse("{$set: {'temporary': " + temporary + "} }"), false, false);
   }
 
   /**
@@ -135,7 +143,7 @@ public class Session implements Protocol, ConfigDefs {
   protected void setAddress(String anAddress) {
     address = anAddress;
     if (anAddress != null) {
-      redis.hset(myHkey, "address", address);
+      _coll.update(findPK, (DBObject) JSON.parse("{$set: {'address': '" + address + "'} }"), false, false);
     }
   }
 
@@ -145,7 +153,7 @@ public class Session implements Protocol, ConfigDefs {
   protected void setFormat(String aFormat) {
     format = aFormat;
     if (aFormat != null) {
-      redis.hset(myHkey, "format", format);
+      _coll.update(findPK, (DBObject) JSON.parse("{$set: {'format': '" + format + "'} }"), false, false);
     }
   }
 
@@ -155,7 +163,7 @@ public class Session implements Protocol, ConfigDefs {
   public void setUserAgent(String aUserAgent) {
     userAgent = aUserAgent;
     if (aUserAgent != null) {
-      redis.hset(myHkey, "userAgent", userAgent);
+      _coll.update(findPK, (DBObject) JSON.parse("{$set: {'userAgent': '" + userAgent + "'} }"), false, false);
     }
   }
 
@@ -164,7 +172,7 @@ public class Session implements Protocol, ConfigDefs {
    */
   public void age(long aDeltaMillis) {
     timeToLive -= aDeltaMillis;
-    redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
+    _coll.update(findPK, (DBObject) JSON.parse("{$set: {'timeToLive': " + timeToLive + "} }"), false, false);
   }
 
   /**
@@ -179,7 +187,7 @@ public class Session implements Protocol, ConfigDefs {
    */
   public void kick() {
     timeToLive = LEASE_TIME_MILLIS;
-    redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
+    _coll.update(findPK, (DBObject) JSON.parse("{$set: {'timeToLive': " + timeToLive + "} }"), false, false);
   }
 
   public void start() {
@@ -188,11 +196,10 @@ public class Session implements Protocol, ConfigDefs {
 
   public void stop() {
     timeToLive = 0;
-    redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
+    _coll.update(findPK, (DBObject) JSON.parse("{$set: {'timeToLive': " + timeToLive + "} }"), false, false);
 
     if (this.temporary) {
-      redis.del(myHkey);
-      redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
+      _coll.remove(findPK);
     }
 
     subscriber.stop();
@@ -227,46 +234,35 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public boolean isPersistence() {
-    return redis.exists(myHkey);
+    return _coll.count(findPK) > 0;
   }
 
   public void saveStatus() {
-    //->先把ID放到键为"p:a:s"的List里
-    redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
-    redis.lpush(SessionManager.PUSHLET_ALL_SESSION, id);
-    //<-先把ID放到键为"p:a:s"的List里
+    DBObject dbObj = new BasicDBObject();
 
-    if (userAgent != null) {
-      redis.hset(myHkey, "userAgent", userAgent);
-    }
-    redis.hset(myHkey, "createDate", String.valueOf(createDate));
-    redis.hset(myHkey, "temporary", String.valueOf(temporary));
-    redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
-    if (address != null) {
-      redis.hset(myHkey, "address", address);
-    }
-    if (format != null) {
-      redis.hset(myHkey, "format", format);
-    }
+    dbObj.put("sessionId", id);
+
+    dbObj.put("userAgent", userAgent);
+    dbObj.put("createDate", createDate);
+    dbObj.put("temporary", temporary);
+    dbObj.put("timeToLive", timeToLive);
+    dbObj.put("address", address);
+    dbObj.put("format", format);
+
+    _coll.findAndModify(findPK, SessionManager.dbObj_ignore_id, null, false, dbObj, true, true);
   }
 
   public void readStatus() {
-    String tmpStr;
-    userAgent = redis.hget(myHkey, "userAgent");
-    tmpStr = redis.hget(myHkey, "createDate");
-    if (tmpStr != null) {
-      createDate = Long.parseLong(tmpStr);
-    }
-    tmpStr = redis.hget(myHkey, "temporary");
-    if (tmpStr != null) {
-      temporary = Boolean.parseBoolean(tmpStr);
-    }
-    tmpStr = redis.hget(myHkey, "timeToLive");
-    if (tmpStr != null) {
-      timeToLive = Long.parseLong(tmpStr);
-    }
-    address = redis.hget(myHkey, "address");
-    format = redis.hget(myHkey, "format");
+    BasicDBObject dbObj = (BasicDBObject) _coll.findOne(findPK);
+
+    id = dbObj.getString("sessionId");
+
+    userAgent = dbObj.getString("userAgent");
+    createDate = dbObj.getLong("createDate");
+    temporary = dbObj.getBoolean("temporary");
+    timeToLive = dbObj.getLong("timeToLive");
+    address = dbObj.getString("address");
+    format = dbObj.getString("format");
   }
 
 }

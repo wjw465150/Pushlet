@@ -3,7 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.redis.RedisManager;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
+
+import nl.justobjects.pushlet.mongodb.MongodbManager;
 
 /**
  * FIFO queue with guarded suspension. <b>Purpose</b><br>
@@ -21,16 +26,20 @@ import nl.justobjects.pushlet.redis.RedisManager;
  * @version $Id: EventQueue.java,v 1.3 2007/11/23 14:33:07 justb Exp $
  */
 public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
-  static RedisManager redis = RedisManager.getInstance();
-  private static final String PUSHLET_EVENTQUEUE_PREFIX = "p:eq:";
+  static MongodbManager mongo = MongodbManager.getInstance();
+  private static final DBCollection _coll = mongo._db.getCollection("eventqueue");
+  static {
+    _coll.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.eventqueue', name: 'eventqueue_sessionId', unique: false}"));
+  }
   private static final int SLEEP_TIME = 200;
+  private DBObject findPK;
 
   /**
    * Defines maximum queue size
    */
   private int capacity = 256;
 
-  private String myLkey;
+  private String sessionId;
 
   /**
    * Construct queue with default (8) capacity.
@@ -45,7 +54,8 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   public EventQueue(String aSessionId, int capacity) {
     this.capacity = capacity;
 
-    myLkey = PUSHLET_EVENTQUEUE_PREFIX + aSessionId;
+    sessionId = aSessionId;
+    findPK = (DBObject) JSON.parse("{'sessionId': '" + sessionId + "'}");
   }
 
   /**
@@ -76,7 +86,10 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     }
 
     // Put item in queue
-    redis.lpush(myLkey, redis.toXML(item));
+    BasicDBObject obj = new BasicDBObject();
+    obj.put("sessionId", sessionId);
+    obj.putAll(item.attributes);
+    _coll.insert(obj);
 
     return true;
   }
@@ -136,10 +149,12 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     }
 
     // Dequeue all items item
-    String strEvent = null;
     java.util.List<Event> listEvent = new java.util.ArrayList<Event>(this.getSize());
-    while ((strEvent = redis.lpop(myLkey)) != null) {
-      listEvent.add((Event) redis.fromXML(strEvent));
+    DBObject dbObj;
+    Event oneEvent;
+    while ((dbObj = _coll.findAndModify(findPK, SessionManager.dbObj_ignore_id, null, true, null, false, false)) != null) {
+      oneEvent = new Event(dbObj.toMap());
+      listEvent.add(oneEvent);
     }
     Event[] events = listEvent.toArray(new Event[0]);
 
@@ -148,33 +163,35 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   }
 
   public int getSize() {
-    return redis.llen(myLkey).intValue();
+    return (int) _coll.count(findPK);
   }
 
   /**
    * Is the queue empty ?
    */
   public boolean isEmpty() {
-    return redis.llen(myLkey).intValue() == 0;
+    return this.getSize() == 0;
   }
 
   /**
    * Is the queue full ?
    */
   public boolean isFull() {
-    return redis.llen(myLkey).intValue() == capacity;
+    return this.getSize() >= capacity;
   }
 
   /**
    * Circular counter.
    */
   private Event fetchNext() {
-    return (Event) redis.fromXML(redis.lpop(myLkey));
+    DBObject dbObj = _coll.findAndModify(findPK, SessionManager.dbObj_ignore_id, null, true, null, false, false);
+    Event oneEvent = new Event(dbObj.toMap());
+    return oneEvent;
   }
 
-  //@wjw_add 清除保存在redis里的事件
+  //@wjw_add 清除保存在mongodb里的事件
   public void clear() {
-    redis.del(myLkey);
+    _coll.remove(findPK);
   }
 
 }

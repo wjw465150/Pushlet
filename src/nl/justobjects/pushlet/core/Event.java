@@ -150,4 +150,8 @@ public class Event implements Protocol, Serializable {
   private void setAttrs(Map theAttributes) {
     attributes.putAll(theAttributes);
   }
+
+//  public Map getAttributes() {
+//    return attributes;
+//  }
 }

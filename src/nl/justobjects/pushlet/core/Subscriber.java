@@ -3,7 +3,13 @@
 
 package nl.justobjects.pushlet.core;
 
-import nl.justobjects.pushlet.redis.RedisManager;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
+
+import nl.justobjects.pushlet.mongodb.MongodbManager;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Rand;
 import nl.justobjects.pushlet.util.Sys;
@@ -15,13 +21,26 @@ import nl.justobjects.pushlet.util.Sys;
  * @version $Id: Subscriber.java,v 1.26 2007/11/23 14:33:07 justb Exp $
  */
 public class Subscriber implements Protocol, ConfigDefs {
-  static RedisManager redis = RedisManager.getInstance();
-  private static final String PUSHLET_SUBSCRIBER_PREFIX = "p:sr:";
-  private static final String PUSHLET_SUBSCRIPTION_PREFIX = "p:sc:";
-  private static final String PUSHLET_SUBJECT_PREFIX = "p:sj:";
-  private String myHkey;
-  private String subscriptionHkey;
-  private String subjectHkey;
+  static MongodbManager mongo = MongodbManager.getInstance();
+  private static final DBCollection _coll_SR = mongo._db.getCollection("subscriber");
+  private static final DBCollection _coll_SC = mongo._db.getCollection("subscription");
+  private static final DBCollection _coll_SJ = mongo._db.getCollection("subject");
+  static {
+    _coll_SR.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscriber', name: 'subscriber_sessionId', unique: true}"));
+
+    _coll_SC.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId', unique: false}"));
+    _coll_SC.createIndex((DBObject) JSON.parse("{'sessionId': 1, 'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId_subject', unique: true}"));
+
+    _coll_SJ.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subject', name: 'subject_sessionId', unique: false}"));
+    _coll_SJ.createIndex((DBObject) JSON.parse("{'sessionId': 1, 'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subject', name: 'subject_sessionId_subject', unique: true}"));
+    _coll_SJ.createIndex((DBObject) JSON.parse("{'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subject', name: 'subject_subject', unique: false}"));
+  }
+
+  private DBObject findPK;
+
+  //  private String myHkey;
+  //  private String subscriptionHkey;
+  //  private String subjectHkey;
 
   /**
    * URL to be used in refresh requests in pull/poll modes.
@@ -72,9 +91,7 @@ public class Subscriber implements Protocol, ConfigDefs {
     }
 
     subscriber.session = aSession;
-    subscriber.myHkey = PUSHLET_SUBSCRIBER_PREFIX + aSession.getId();
-    subscriber.subscriptionHkey = PUSHLET_SUBSCRIPTION_PREFIX + aSession.getId();
-    subscriber.subjectHkey = PUSHLET_SUBJECT_PREFIX + aSession.getId();
+    subscriber.findPK = (DBObject) JSON.parse("{'sessionId': '" + aSession.getId() + "'}");
     subscriber.eventQueue = new EventQueue(aSession.getId(), Config.getIntProperty(QUEUE_SIZE));
 
     if (subscriber.isPersistence()) {
@@ -95,8 +112,8 @@ public class Subscriber implements Protocol, ConfigDefs {
     if (session.isTemporary()) {
       eventQueue.clear(); //@wjw_add 在停止时要清除事件队列
 
-      redis.del(myHkey); //清除redis里的subscriber
-      removeSubscriptions(); //清除redis里的subscriptions
+      _coll_SR.remove(findPK); //清除mongodb里的subscriber
+      removeSubscriptions(); //清除mongodb里的subscriptions
     }
   }
 
@@ -126,13 +143,16 @@ public class Subscriber implements Protocol, ConfigDefs {
    */
   public Subscription addSubscription(String aSubject, String aLabel) throws PushletException {
     Subscription subscription = Subscription.create(aSubject, aLabel);
-    String strSubscription = redis.toXML(subscription);
-    redis.hset(subscriptionHkey, subscription.getSubject(), strSubscription);
+    _coll_SC.findAndModify((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '" + aSubject
+        + "'}"), SessionManager.dbObj_ignore_id, null, false, subscription.toDBObject(session.getId()), true, true);
 
-    //把单个的subject存到redis的Hash表里,方便match查找
+    //把单个的subject存到subject表里,方便match查找
     String[] subjects = subscription.getSubjects();
     for (String oneSubject : subjects) {
-      redis.hset(subjectHkey, oneSubject, strSubscription);
+      DBObject dbSubject = BasicDBObjectBuilder.start().add("sessionId", session.getId()).add("subject", oneSubject).get();
+
+      _coll_SJ.findAndModify((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '" + oneSubject
+          + "'}"), SessionManager.dbObj_ignore_id, null, false, dbSubject, true, true);
     }
 
     info("Subscription added subject=" + aSubject + " sid=" + subscription.getSubject() + " label=" + aLabel);
@@ -145,16 +165,21 @@ public class Subscriber implements Protocol, ConfigDefs {
   public Subscription removeSubscription(String aSubscriptionId) {
     Subscription subscription = null;
 
-    String strSubscription = redis.hget(subscriptionHkey, aSubscriptionId);
-    if (strSubscription == null) {
+    DBObject dbSubscription = _coll_SC.findAndRemove((DBObject) JSON.parse("{'sessionId': '" + session.getId()
+        + "', 'subject': '" + aSubscriptionId + "'}"));
+    if (dbSubscription == null) {
       subscription = null;
     } else {
-      subscription = (Subscription) redis.fromXML(strSubscription);
-      redis.hdel(subscriptionHkey, aSubscriptionId);
+      try {
+        subscription = Subscription.create((String) dbSubscription.get("subject"), (String) dbSubscription.get("label"));
+      } catch (PushletException e) {
+        subscription = null;
+      }
 
       String[] subjects = subscription.getSubjects();
       for (String oneSubject : subjects) {
-        redis.hdel(subjectHkey, oneSubject);
+        _coll_SJ.remove((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '" + oneSubject
+            + "'}"));
       }
     }
 
@@ -171,8 +196,8 @@ public class Subscriber implements Protocol, ConfigDefs {
    * Remove all subscriptions.
    */
   public void removeSubscriptions() {
-    redis.del(subscriptionHkey);
-    redis.del(subjectHkey);
+    _coll_SC.remove(findPK);
+    _coll_SJ.remove(findPK);
   }
 
   public String getMode() {
@@ -181,7 +206,7 @@ public class Subscriber implements Protocol, ConfigDefs {
 
   public void setMode(String aMode) {
     mode = aMode;
-    redis.hset(myHkey, "mode", mode);
+    _coll_SR.update(findPK, (DBObject) JSON.parse("{$set: {'mode': '" + mode + "'} }"), false, false);
   }
 
   public long getRefreshTimeMillis() {
@@ -312,11 +337,24 @@ public class Subscriber implements Protocol, ConfigDefs {
    * Determine if we should receive event.
    */
   public Subscription match(Event event) {
-    String strSubscription = redis.hget(subjectHkey, event.getSubject());
-    if (strSubscription == null) {
+    DBObject dbSubject = _coll_SJ.findOne((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '"
+        + event.getSubject() + "'}"));
+    if (dbSubject == null) {
       return null;
     }
-    Subscription subscription = (Subscription) redis.fromXML(strSubscription);
+
+    Subscription subscription;
+    try {
+      DBObject dbSubscription = _coll_SC.findOne((DBObject) JSON.parse("{'sessionId': '" + session.getId()
+          + "', 'subjects': '" + event.getSubject() + "'}"));
+      if (dbSubscription == null) {
+        subscription = null;
+      } else {
+        subscription = Subscription.create((String) dbSubscription.get("subject"), (String) dbSubscription.get("label"));
+      }
+    } catch (PushletException e) {
+      subscription = null;
+    }
 
     return subscription;
 
@@ -411,17 +449,19 @@ public class Subscriber implements Protocol, ConfigDefs {
   }
 
   public boolean isPersistence() {
-    return redis.exists(myHkey);
+    return _coll_SR.count(findPK) > 0;
   }
 
   public void saveStatus() {
-    if (mode != null) {
-      redis.hset(myHkey, "mode", mode);
-    }
+    DBObject dbObj = BasicDBObjectBuilder.start().add("sessionId", session.getId()).add("mode", mode).get();
+
+    _coll_SR.findAndModify(findPK, SessionManager.dbObj_ignore_id, null, false, dbObj, true, true);
   }
 
   public void readStatus() {
-    mode = redis.hget(myHkey, "mode");
+    BasicDBObject dbObj = (BasicDBObject) _coll_SR.findOne(findPK);
+
+    mode = dbObj.getString("mode");
   }
 
 }

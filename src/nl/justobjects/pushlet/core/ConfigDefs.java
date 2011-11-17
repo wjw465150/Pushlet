@@ -64,40 +64,20 @@ public interface ConfigDefs {
   public static final String POLL_REFRESH_WAIT_MIN_MILLIS = "poll.refresh.wait.min.millis";
   public static final String POLL_REFRESH_WAIT_MAX_MILLIS = "poll.refresh.wait.max.millis";
 
-  //@wjw_add for redis
-  public static final String REDIS_MANAGER_CLASS = "redismanager.class";
-  public static final String REDIS_DEBUG = "redis.debug";
-  public static final String REDIS_SERVERLIST = "redis.serverlist";
-  public static final String REDIS_MINCONN = "redis.minconn";
-  public static final String REDIS_MAXCONN = "redis.maxconn";
-  public static final String REDIS_SOCKETTO = "redis.socketto";
+  //@wjw_add for mongodb
+  public static final String MONGODB_MANAGER_CLASS = "mongodbmanager.class";
+  public static final String MONGODB_SERVERLIST = "mongodb.serverlist";
+  public static final String MONGODB_AUTOCONNECTRETRY = "mongodb.autoConnectRetry";
+  public static final String MONGODB_CONNECTIONSPERHOST = "mongodb.connectionsPerHost";
+  public static final String MONGODB_THREADSALLOWEDTOBLOCKFORCONNECTIONMULTIPLIER = "mongodb.threadsAllowedToBlockForConnectionMultiplier";
+  public static final String MONGODB_MAXWAITTIME = "mongodb.maxWaitTime";
+  public static final String MONGODB_SLAVEOK = "mongodb.slaveOk";
+  public static final String MONGODB_SOCKETKEEPALIVE = "mongodb.socketKeepAlive";
+  public static final String MONGODB_SOCKETTIMEOUT = "mongodb.socketTimeout";
+  public static final String MONGODB_CONNECTTIMEOUT = "mongodb.connectTimeout";
+  public static final String MONGODB_SAFE = "mongodb.safe";
+  public static final String MONGODB_W = "mongodb.w";
+  public static final String MONGODB_WTIMEOUT = "mongodb.wtimeout";
+  public static final String MONGODB_FSYNC = "mongodb.fsync";
+
 }
-
-/*
- * $Log: ConfigDefs.java,v $ Revision 1.9 2007/12/07 12:57:40 justb added log4j
- * and make it the default logging method
- * 
- * Revision 1.8 2007/11/23 21:10:17 justb add hooks for custom logging (you can
- * override DefaultLogger in pushlet.properties)
- * 
- * Revision 1.7 2007/11/23 14:33:07 justb core classes now configurable through
- * factory
- * 
- * Revision 1.6 2007/11/10 14:48:35 justb make session key generation
- * configurable (can use uuid)
- * 
- * Revision 1.5 2005/02/28 09:14:55 justb sessmgr/dispatcher factory/singleton
- * support
- * 
- * Revision 1.4 2005/02/21 16:59:00 justb SessionManager and session lease
- * introduced
- * 
- * Revision 1.3 2005/02/21 11:50:46 justb ohase1 of refactoring Subscriber into
- * Session/Controller/Subscriber
- * 
- * Revision 1.2 2005/02/21 11:16:44 justb add log level config prop
- * 
- * Revision 1.1 2005/02/18 12:36:47 justb changes for renaming and
- * configurability
- */
-

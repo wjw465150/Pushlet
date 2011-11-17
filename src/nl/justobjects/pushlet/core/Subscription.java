@@ -3,6 +3,9 @@
 
 package nl.justobjects.pushlet.core;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 import nl.justobjects.pushlet.util.PushletException;
 
 /**
@@ -89,4 +92,14 @@ public class Subscription implements ConfigDefs {
     return subjects;
   }
 
+  public DBObject toDBObject(String aSessionId) {
+    DBObject result = new BasicDBObject();
+    result.put("sessionId", aSessionId);
+    
+    result.put("subject", subject);
+    result.put("label", label);
+    result.put("subjects", subjects);
+
+    return result;
+  }
 }

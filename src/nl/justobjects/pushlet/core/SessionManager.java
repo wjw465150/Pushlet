@@ -12,11 +12,15 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import nl.justobjects.pushlet.redis.RedisManager;
+import nl.justobjects.pushlet.mongodb.MongodbManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Rand;
 import nl.justobjects.pushlet.util.Sys;
+
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 /**
  * Manages lifecycle of Sessions.
@@ -25,9 +29,8 @@ import nl.justobjects.pushlet.util.Sys;
  * @version $Id: SessionManager.java,v 1.12 2007/12/04 13:55:53 justb Exp $
  */
 public class SessionManager implements ConfigDefs {
-  static RedisManager redis = RedisManager.getInstance();
-
-  static final String PUSHLET_ALL_SESSION = "p:a:s";
+  static MongodbManager mongo = MongodbManager.getInstance();
+  public static final DBObject dbObj_ignore_id = (DBObject) JSON.parse("{'_id': 0}");
 
   /**
    * Singleton pattern: single instance.
@@ -96,31 +99,33 @@ public class SessionManager implements ConfigDefs {
         Log.warn("apply: method invoke: ", e);
       }
     }
-    
+
     //@wjw_add 当服务器发出E_ABORT消息时,只发给当前节点的Session
-    if(args.length==2 && args[1] instanceof Event) {
+    if (args.length == 2 && args[1] instanceof Event) {
       Event event = (Event) args[1];
-      if(event.getEventType().equals(Protocol.E_ABORT)) {
+      if (event.getEventType().equals(Protocol.E_ABORT)) {
         return;
       }
     }
 
-    //@wjw_add 在查找本地没有,而redis有的其他节点上的session
-    // @wjw_note 方法1->分批获取所有redis里的session
-    java.util.List<byte[]> allSessions = null;
+    //@wjw_add 在查找本地没有,而mongodb有的其他节点上的session
+    // @wjw_note 方法1->分批获取所有mongodb里的session
+    DBCursor allSessions = null;
     int start = 0;
+    DBObject dbSession;
     String tempSessionId;
     Session tempSession;
     while (true) {
-      allSessions = redis.lrange(PUSHLET_ALL_SESSION, start, start + 99);
+      allSessions = Session._coll.find().skip(start).limit(100);
       if (allSessions.size() == 0) {
         break;
       }
-      
+
       start = start + allSessions.size();
-      for (byte[] bb : allSessions) {
+      while (allSessions.hasNext()) {
         try {
-          tempSessionId = new String(bb, RedisManager.REDIS_CHARSET);
+          dbSession = allSessions.next();
+          tempSessionId = (String) dbSession.get("sessionId");
           if (sessions.containsKey(tempSessionId) == false) {
             tempSession = Session.create(tempSessionId);
             tempSession.getSubscriber().start();
@@ -134,26 +139,6 @@ public class SessionManager implements ConfigDefs {
       }
     }
 
-    // @wjw_note 方法2->此获取所有redis里的session方法,太耗内存!
-    //    java.util.Set<byte[]> sessionsSet = redis.keys(Session.PUSHLET_SESSION_PREFIX + "*");
-    //    String tempSessionId;
-    //    Session tempSession;
-    //    for (byte[] bb : sessionsSet) {
-    //      try {
-    //        tempSessionId = new String(bb, redis.REDIS_CHARSET);
-    //        tempSessionId = tempSessionId.substring(Session.PUSHLET_SESSION_PREFIX.length());
-    //        if (sessions.containsKey(tempSessionId) == false) {
-    //          tempSession = Session.create(tempSessionId);
-    //          tempSession.getSubscriber().start();
-    //
-    //          args[0] = tempSession;
-    //          method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
-    //        }
-    //      } catch (Exception e) {
-    //        Log.warn("apply: method invoke: ", e);
-    //      }
-    //    }
-    
   }
 
   /**
@@ -182,8 +167,9 @@ public class SessionManager implements ConfigDefs {
   public Session getSession(boolean canAdd, String anId) {
     Session tmpSession = (Session) sessions.get(anId);
 
-    //@wjw_add 再从redis里查询是否有此anId的session
-    if (tmpSession == null && redis.exists(Session.PUSHLET_SESSION_PREFIX + anId)) {
+    //@wjw_add 再从mongodb里查询是否有此anId的session
+    DBObject dbSession = Session._coll.findOne((DBObject) JSON.parse("{'sessionId': '" + anId + "'}"));
+    if (tmpSession == null && dbSession != null) {
       try {
         tmpSession = Session.create(anId);
         tmpSession.getSubscriber().start();
@@ -274,7 +260,7 @@ public class SessionManager implements ConfigDefs {
       timer = null;
     }
 
-    //->@wjw_add 原作者在停止SessionManager时没有销毁session,在使用redis持久化时会残留垃圾信息.
+    //->@wjw_add 原作者在停止SessionManager时没有销毁session,在使用mongodb持久化时会残留垃圾信息.
     Session[] arraySession = getSessions();
     for (Session ss : arraySession) {
       ss.stop();
