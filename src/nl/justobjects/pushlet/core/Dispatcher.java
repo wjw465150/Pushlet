@@ -3,10 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 
@@ -17,6 +19,8 @@ import nl.justobjects.pushlet.util.PushletException;
  * @version $Id: Dispatcher.java,v 1.9 2007/12/04 13:55:53 justb Exp $
  */
 public class Dispatcher implements Protocol, ConfigDefs {
+  static RedisManager redis = RedisManager.getInstance();
+
   /**
    * Singleton pattern: single instance.
    */
@@ -68,17 +72,19 @@ public class Dispatcher implements Protocol, ConfigDefs {
    * Send event to subscribers matching Event subject.
    */
   public void multicast(Event anEvent) {
-    try {
-      // Let the SessionManager loop through Sessions, calling
-      // our Visitor Method for each Session. This is done to guard
-      // synchronization with SessionManager and to optimize by
-      // not getting an array of all sessions.
-      Object[] args = new Object[2];
-      args[1] = anEvent; //TODO@ 此处args[0]留出来给SessionManager.getInstance().apply来填充为相关的session
-      Method method = sessionManagerVisitor.getMethod(SessionManagerVisitor.VISIT_MULTICAST);
-      SessionManager.getInstance().apply(sessionManagerVisitor, method, args);
-    } catch (Throwable t) {
-      Log.error("Error calling SessionManager.apply: ", t);
+    String tempSessionId;
+    Session tempSession;
+    java.util.Set<byte[]> bbSubject = redis.hkeys(Subscriber.PUSHLET_SUBJECT_PREFIX + anEvent.getSubject());
+    for (byte[] bb : bbSubject) {
+      try {
+        tempSessionId = new String(bb, RedisManager.REDIS_CHARSET);
+        tempSession = Session.create(tempSessionId);
+        tempSession.getSubscriber().start();
+
+        sessionManagerVisitor.visitMulticast(tempSession, anEvent);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
   }
 
