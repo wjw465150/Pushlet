@@ -28,6 +28,7 @@ public class SessionManager implements ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
 
   static final String PUSHLET_ALL_SESSION = "p:a:s";
+  static final String PUSHLET_SET_SESSION = "p:s:s";
 
   /**
    * Singleton pattern: single instance.
@@ -96,11 +97,11 @@ public class SessionManager implements ConfigDefs {
         Log.warn("apply: method invoke: ", e);
       }
     }
-    
+
     //@wjw_add 当服务器发出E_ABORT消息时,只发给当前节点的Session
-    if(args.length==2 && args[1] instanceof Event) {
+    if (args.length == 2 && args[1] instanceof Event) {
       Event event = (Event) args[1];
-      if(event.getEventType().equals(Protocol.E_ABORT)) {
+      if (event.getEventType().equals(Protocol.E_ABORT)) {
         return;
       }
     }
@@ -116,7 +117,7 @@ public class SessionManager implements ConfigDefs {
       if (allSessions.size() == 0) {
         break;
       }
-      
+
       start = start + allSessions.size();
       for (byte[] bb : allSessions) {
         try {
@@ -153,7 +154,7 @@ public class SessionManager implements ConfigDefs {
     //        Log.warn("apply: method invoke: ", e);
     //      }
     //    }
-    
+
   }
 
   /**

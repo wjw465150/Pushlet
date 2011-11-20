@@ -3,10 +3,14 @@
 
 package nl.justobjects.pushlet.core;
 
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
-import nl.justobjects.pushlet.util.Sys;
 
 /**
  * Represents client pushlet session state.
@@ -68,8 +72,9 @@ public class Session implements Protocol, ConfigDefs {
     session.myHkey = PUSHLET_SESSION_PREFIX + session.id;
     if (session.isPersistence()) {
       session.readStatus();
+    } else {
+      session.saveStatus();
     }
-    session.saveStatus();
 
     return session;
   }
@@ -191,8 +196,14 @@ public class Session implements Protocol, ConfigDefs {
     redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
 
     if (this.temporary) {
+      //->先把ID从键为("p:s:s"的Set以及"p:a:s"的List)里删除
+      if (redis.sismember(SessionManager.PUSHLET_SET_SESSION, id)) {
+        redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
+        redis.srem(SessionManager.PUSHLET_SET_SESSION, id);
+      }
+      //<-先把ID从键为("p:s:s"的Set以及"p:a:s"的List)里删除
+
       redis.del(myHkey);
-      redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
     }
 
     subscriber.stop();
@@ -231,42 +242,66 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void saveStatus() {
-    //->先把ID放到键为"p:a:s"的List里
-    redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
-    redis.lpush(SessionManager.PUSHLET_ALL_SESSION, id);
-    //<-先把ID放到键为"p:a:s"的List里
+    Map<String, String> keyValues = new HashMap<String, String>(8);
 
     if (userAgent != null) {
-      redis.hset(myHkey, "userAgent", userAgent);
+      keyValues.put("userAgent", userAgent);
     }
-    redis.hset(myHkey, "createDate", String.valueOf(createDate));
-    redis.hset(myHkey, "temporary", String.valueOf(temporary));
-    redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
+    keyValues.put("createDate", String.valueOf(createDate));
+    keyValues.put("temporary", String.valueOf(temporary));
+    keyValues.put("timeToLive", String.valueOf(timeToLive));
     if (address != null) {
-      redis.hset(myHkey, "address", address);
+      keyValues.put("address", address);
     }
     if (format != null) {
-      redis.hset(myHkey, "format", format);
+      keyValues.put("format", format);
     }
+
+    redis.hmset(myHkey, keyValues);
+
+    //->再把ID放到键为("p:s:s"的Set以及"p:a:s"的List)里
+    if (redis.sismember(SessionManager.PUSHLET_SET_SESSION, id) == false) {
+      redis.sadd(SessionManager.PUSHLET_SET_SESSION, id);
+      redis.lpush(SessionManager.PUSHLET_ALL_SESSION, id);
+    }
+    //<-再把ID放到键为("p:s:s"的Set以及"p:a:s"的List)里
+    
+    keyValues.clear();
   }
 
   public void readStatus() {
+    java.util.Map<byte[], byte[]> bhash = redis.hgetAll(myHkey);
+    java.util.Map<String, String> keyValues = new HashMap<String, String>(bhash.size());
+    Map.Entry<byte[], byte[]> entry;
+    Iterator<Map.Entry<byte[], byte[]>> iterator = bhash.entrySet().iterator();
+    while (iterator.hasNext()) {
+      entry = iterator.next();
+      try {
+        keyValues.put(new String(entry.getKey(), RedisManager.REDIS_CHARSET), new String(entry.getValue(), RedisManager.REDIS_CHARSET));
+      } catch (UnsupportedEncodingException e) {
+        e.printStackTrace();
+      }
+    }
+    bhash.clear();
+
     String tmpStr;
-    userAgent = redis.hget(myHkey, "userAgent");
-    tmpStr = redis.hget(myHkey, "createDate");
+    userAgent = keyValues.get("userAgent");
+    tmpStr = keyValues.get("createDate");
     if (tmpStr != null) {
       createDate = Long.parseLong(tmpStr);
     }
-    tmpStr = redis.hget(myHkey, "temporary");
+    tmpStr = keyValues.get("temporary");
     if (tmpStr != null) {
       temporary = Boolean.parseBoolean(tmpStr);
     }
-    tmpStr = redis.hget(myHkey, "timeToLive");
+    tmpStr = keyValues.get("timeToLive");
     if (tmpStr != null) {
       timeToLive = Long.parseLong(tmpStr);
     }
-    address = redis.hget(myHkey, "address");
-    format = redis.hget(myHkey, "format");
+    address = keyValues.get("address");
+    format = keyValues.get("format");
+    
+    keyValues.clear();
   }
 
 }

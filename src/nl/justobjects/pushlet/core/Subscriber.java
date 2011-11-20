@@ -79,8 +79,9 @@ public class Subscriber implements Protocol, ConfigDefs {
 
     if (subscriber.isPersistence()) {
       subscriber.readStatus();
+    } else {
+      subscriber.saveStatus();
     }
-    subscriber.saveStatus();
 
     return subscriber;
   }
@@ -336,7 +337,7 @@ public class Subscriber implements Protocol, ConfigDefs {
       return null;
     }
 
-    Subscription subscription = (Subscription) redis.fromXML(strSubscription);
+    Subscription subscription = (Subscription) redis.fromXML(strSubscription); //TODO@wjw_note 可以优化的地方
 
     return subscription;
 
