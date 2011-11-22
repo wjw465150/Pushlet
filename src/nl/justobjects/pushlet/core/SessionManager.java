@@ -27,8 +27,7 @@ import nl.justobjects.pushlet.util.Sys;
 public class SessionManager implements ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
 
-  static final String PUSHLET_ALL_SESSION = "p:a:s";
-  static final String PUSHLET_SET_SESSION = "p:s:s";
+  static final String PUSHLET_ZSET_ALLSESSION = "p:zset:as";
 
   /**
    * Singleton pattern: single instance.
@@ -108,12 +107,12 @@ public class SessionManager implements ConfigDefs {
 
     //@wjw_add 在查找本地没有,而redis有的其他节点上的session
     // @wjw_note 方法1->分批获取所有redis里的session
-    java.util.List<byte[]> allSessions = null;
+    java.util.Set<byte[]> allSessions = null;
     int start = 0;
     String tempSessionId;
     Session tempSession;
     while (true) {
-      allSessions = redis.lrange(PUSHLET_ALL_SESSION, start, start + 99);
+      allSessions = redis.zrange(PUSHLET_ZSET_ALLSESSION, start, start + 99);
       if (allSessions.size() == 0) {
         break;
       }

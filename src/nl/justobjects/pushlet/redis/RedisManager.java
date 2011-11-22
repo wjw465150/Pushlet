@@ -119,7 +119,7 @@ public class RedisManager {
     return _xstream.fromXML(xml);
   }
 
-  //基本操作
+  //TODO@基本操作
   public java.util.Set<byte[]> keys(String pattern) {
     if (_pool != null) {
       Jedis jedis = null;
@@ -303,7 +303,7 @@ public class RedisManager {
 
   }
 
-  //Hash操作
+  //TODO@Hash操作
   public String hget(String hkey, String field) {
     if (_pool != null) {
       Jedis jedis = null;
@@ -641,7 +641,7 @@ public class RedisManager {
     }
   }
 
-  //List操作
+  //TODO@List操作
   public Long lpush(String lkey, String value) {
     if (_pool != null) {
       Jedis jedis = null;
@@ -796,7 +796,7 @@ public class RedisManager {
     }
   }
 
-  public java.util.List<byte[]> lrange(java.lang.String lkey, int start, int end) {
+  public java.util.List<byte[]> lrange(String lkey, int start, int end) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
@@ -864,7 +864,7 @@ public class RedisManager {
     }
   }
 
-  //Set操作
+  //TODO@Set操作
   public Boolean sismember(String skey, String member) {
     if (_pool != null) {
       Jedis jedis = null;
@@ -966,4 +966,142 @@ public class RedisManager {
       }
     }
   }
+
+  //TODO@sort_set
+  public Long zadd(String zkey, double score, String member) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.zadd(zkey.getBytes(REDIS_CHARSET), score, member.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.zadd(zkey.getBytes(REDIS_CHARSET), score, member.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
+  public Long zrem(String zkey, String member) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.zrem(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.zrem(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
+  public Double zscore(String zkey, String member) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.zscore(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.zscore(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
+  public java.util.Set<byte[]> zrange(String zkey, int start, int end) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.zrange(zkey.getBytes(REDIS_CHARSET), start, end);
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.zrange(zkey.getBytes(REDIS_CHARSET), start, end);
+      } catch (IOException e) {
+        throw new JedisConnectionException(e);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
 }

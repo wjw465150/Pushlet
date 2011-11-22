@@ -74,7 +74,8 @@ public class Dispatcher implements Protocol, ConfigDefs {
   public void multicast(Event anEvent) {
     String tempSessionId;
     Session tempSession;
-    java.util.Set<byte[]> bbSubject = redis.hkeys(Subscriber.PUSHLET_SUBJECT_PREFIX + anEvent.getSubject());
+    //TODO@wjw_note: 以后可以使用分页查询,方法是,添加一个Sort_Set,key是"p:zset:sj: + oneSubject",member是:sessionId.
+    java.util.Set<byte[]> bbSubject = redis.hkeys(Subscriber.PUSHLET_SUBJECT_PREFIX + anEvent.getSubject()); 
     for (byte[] bb : bbSubject) {
       try {
         tempSessionId = new String(bb, RedisManager.REDIS_CHARSET);

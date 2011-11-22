@@ -196,12 +196,11 @@ public class Session implements Protocol, ConfigDefs {
     redis.hset(myHkey, "timeToLive", String.valueOf(timeToLive));
 
     if (this.temporary) {
-      //->先把ID从键为("p:s:s"的Set以及"p:a:s"的List)里删除
-      if (redis.sismember(SessionManager.PUSHLET_SET_SESSION, id)) {
-        redis.lrem(SessionManager.PUSHLET_ALL_SESSION, 0, id);
-        redis.srem(SessionManager.PUSHLET_SET_SESSION, id);
+      //->先把ID从键为("p:zset:as"的ZSet)里删除
+      if (redis.zscore(SessionManager.PUSHLET_ZSET_ALLSESSION, id) != null) {
+        redis.zrem(SessionManager.PUSHLET_ZSET_ALLSESSION, id);
       }
-      //<-先把ID从键为("p:s:s"的Set以及"p:a:s"的List)里删除
+      //<-先把ID从键为("p:zet:as"的ZSet)里删除
 
       redis.del(myHkey);
     }
@@ -259,13 +258,12 @@ public class Session implements Protocol, ConfigDefs {
 
     redis.hmset(myHkey, keyValues);
 
-    //->再把ID放到键为("p:s:s"的Set以及"p:a:s"的List)里
-    if (redis.sismember(SessionManager.PUSHLET_SET_SESSION, id) == false) {
-      redis.sadd(SessionManager.PUSHLET_SET_SESSION, id);
-      redis.lpush(SessionManager.PUSHLET_ALL_SESSION, id);
+    //->再把ID放到键为("p:zset:as"的ZSet)里
+    if (redis.zscore(SessionManager.PUSHLET_ZSET_ALLSESSION, id) == null) {
+      redis.zadd(SessionManager.PUSHLET_ZSET_ALLSESSION, System.currentTimeMillis(), id);
     }
-    //<-再把ID放到键为("p:s:s"的Set以及"p:a:s"的List)里
-    
+    //<-再把ID放到键为("p:zset:as"的ZSet)里
+
     keyValues.clear();
   }
 
@@ -300,7 +298,7 @@ public class Session implements Protocol, ConfigDefs {
     }
     address = keyValues.get("address");
     format = keyValues.get("format");
-    
+
     keyValues.clear();
   }
 

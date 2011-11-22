@@ -128,7 +128,7 @@ public class Subscriber implements Protocol, ConfigDefs {
   public Subscription addSubscription(String aSubject, String aLabel) throws PushletException {
     Subscription subscription = Subscription.create(aSubject, aLabel);
     String strSubscription = redis.toXML(subscription);
-    redis.hset(subscriptionHkey, subscription.getSubject(), strSubscription);
+    redis.hset(subscriptionHkey, aSubject, strSubscription);
 
     //把单个的subject存到redis的Hash表里,方便match查找
     String[] subjects = subscription.getSubjects();
@@ -136,7 +136,7 @@ public class Subscriber implements Protocol, ConfigDefs {
       redis.hset(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId(), aSubject);
     }
 
-    info("Subscription added subject=" + aSubject + " sid=" + subscription.getSubject() + " label=" + aLabel);
+    info("Subscription added subject=" + aSubject + " sid=" + aSubject + " label=" + aLabel);
     return subscription;
   }
 
