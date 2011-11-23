@@ -3,9 +3,7 @@
 
 package nl.justobjects.pushlet.core;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import nl.justobjects.pushlet.redis.RedisManager;
@@ -20,7 +18,7 @@ import nl.justobjects.pushlet.util.PushletException;
  */
 public class Session implements Protocol, ConfigDefs {
   static RedisManager redis = RedisManager.getInstance();
-  static final String PUSHLET_SESSION_PREFIX = "p:s:";
+  static final String PUSHLET_SESSION_PREFIX = "p:ss:";
   private String myHkey;
 
   private Controller controller;
@@ -268,19 +266,7 @@ public class Session implements Protocol, ConfigDefs {
   }
 
   public void readStatus() {
-    java.util.Map<byte[], byte[]> bhash = redis.hgetAll(myHkey);
-    java.util.Map<String, String> keyValues = new HashMap<String, String>(bhash.size());
-    Map.Entry<byte[], byte[]> entry;
-    Iterator<Map.Entry<byte[], byte[]>> iterator = bhash.entrySet().iterator();
-    while (iterator.hasNext()) {
-      entry = iterator.next();
-      try {
-        keyValues.put(new String(entry.getKey(), RedisManager.REDIS_CHARSET), new String(entry.getValue(), RedisManager.REDIS_CHARSET));
-      } catch (UnsupportedEncodingException e) {
-        e.printStackTrace();
-      }
-    }
-    bhash.clear();
+    java.util.Map<String, String> keyValues = redis.hgetAll(myHkey);
 
     String tmpStr;
     userAgent = keyValues.get("userAgent");

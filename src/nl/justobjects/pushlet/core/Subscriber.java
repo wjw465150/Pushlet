@@ -3,8 +3,6 @@
 
 package nl.justobjects.pushlet.core;
 
-import java.io.UnsupportedEncodingException;
-
 import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Rand;
@@ -21,6 +19,7 @@ public class Subscriber implements Protocol, ConfigDefs {
   static final String PUSHLET_SUBSCRIBER_PREFIX = "p:sr:";
   static final String PUSHLET_SUBSCRIPTION_PREFIX = "p:sc:";
   static final String PUSHLET_SUBJECT_PREFIX = "p:sj:";
+  static final String PUSHLET_ZSET_SUBJECT_PREFIX = "p:zset:sj:";
   private String myHkey;
   private String subscriptionHkey;
 
@@ -134,6 +133,7 @@ public class Subscriber implements Protocol, ConfigDefs {
     String[] subjects = subscription.getSubjects();
     for (String oneSubject : subjects) {
       redis.hset(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId(), aSubject);
+      redis.zadd(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, System.currentTimeMillis(), session.getId());
     }
 
     info("Subscription added subject=" + aSubject + " sid=" + aSubject + " label=" + aLabel);
@@ -156,6 +156,7 @@ public class Subscriber implements Protocol, ConfigDefs {
       String[] subjects = subscription.getSubjects();
       for (String oneSubject : subjects) {
         redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
+        redis.zrem(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, session.getId());
       }
     }
 
@@ -174,16 +175,13 @@ public class Subscriber implements Protocol, ConfigDefs {
   public void removeSubscriptions() {
     //@wjw_aad先删除关联的subject
     Subscription subscription;
-    java.util.List<byte[]> bbSubscription = redis.hvals(subscriptionHkey);
-    for (byte[] bb : bbSubscription) {
-      try {
-        subscription = (Subscription) redis.fromXML(new String(bb, RedisManager.REDIS_CHARSET));
-        String[] subjects = subscription.getSubjects();
-        for (String oneSubject : subjects) {
-          redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
-        }
-      } catch (UnsupportedEncodingException e) {
-        e.printStackTrace();
+    java.util.List<String> subscriptions = redis.hvals(subscriptionHkey);
+    for (String oneSubscription : subscriptions) {
+      subscription = (Subscription) redis.fromXML(oneSubscription);
+      String[] subjects = subscription.getSubjects();
+      for (String oneSubject : subjects) {
+        redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
+        redis.zrem(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, session.getId());
       }
     }
 

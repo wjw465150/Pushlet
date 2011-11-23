@@ -3,7 +3,6 @@
 
 package nl.justobjects.pushlet.core;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,19 +71,25 @@ public class Dispatcher implements Protocol, ConfigDefs {
    * Send event to subscribers matching Event subject.
    */
   public void multicast(Event anEvent) {
-    String tempSessionId;
+    //TODO@wjw_note 以后可以考虑在多播和广播中,使用后台线程池来发送消息,这样可以立即对用户进行响应.
+    java.util.Set<String> allSessionId = null;
+    int start = 0;
     Session tempSession;
-    //TODO@wjw_note: 以后可以使用分页查询,方法是,添加一个Sort_Set,key是"p:zset:sj: + oneSubject",member是:sessionId.
-    java.util.Set<byte[]> bbSubject = redis.hkeys(Subscriber.PUSHLET_SUBJECT_PREFIX + anEvent.getSubject()); 
-    for (byte[] bb : bbSubject) {
-      try {
-        tempSessionId = new String(bb, RedisManager.REDIS_CHARSET);
-        tempSession = Session.create(tempSessionId);
-        tempSession.getSubscriber().start();
+    while (true) {
+      allSessionId = redis.zrange(Subscriber.PUSHLET_ZSET_SUBJECT_PREFIX + anEvent.getSubject(), start, start + 99);
+      if (allSessionId.size() == 0) {
+        break;
+      }
+      start = start + allSessionId.size();
+      for (String oneSessionId : allSessionId) {
+        try {
+          tempSession = Session.create(oneSessionId);
+          tempSession.getSubscriber().start();
 
-        sessionManagerVisitor.visitMulticast(tempSession, anEvent);
-      } catch (Exception e) {
-        e.printStackTrace();
+          sessionManagerVisitor.visitMulticast(tempSession, anEvent);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
     }
   }

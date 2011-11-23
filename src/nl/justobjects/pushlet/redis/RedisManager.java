@@ -5,9 +5,6 @@ import internal.com.thoughtworks.xstream.io.xml.XppDriver;
 import internal.org.apache.commons.pool.impl.GenericObjectPool;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import nl.justobjects.pushlet.core.Config;
 import nl.justobjects.pushlet.core.ConfigDefs;
@@ -119,15 +116,13 @@ public class RedisManager {
     return _xstream.fromXML(xml);
   }
 
-  //TODO@基本操作
-  public java.util.Set<byte[]> keys(String pattern) {
+  //TODO@redis的基本操作
+  public java.util.Set<String> keys(String pattern) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.keys(pattern.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.keys(pattern);
       } finally {
         if (jedis != null) {
           try {
@@ -142,7 +137,7 @@ public class RedisManager {
         jedis = _shardedPool.getResource();
         byte[] bytesKey = pattern.getBytes(REDIS_CHARSET);
         Jedis jedisA = jedis.getShard(bytesKey);
-        return jedisA.keys(pattern.getBytes(REDIS_CHARSET));
+        return jedisA.keys(pattern);
       } catch (IOException e) {
         throw new JedisConnectionException(e);
       } finally {
@@ -161,13 +156,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        byte[] byteValue = jedis.get(key.getBytes(REDIS_CHARSET));
-        if (byteValue == null) {
-          return null;
-        }
-        return new String(byteValue, REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.get(key);
       } finally {
         if (jedis != null) {
           try {
@@ -180,13 +169,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        byte[] byteValue = jedis.get(key.getBytes(REDIS_CHARSET));
-        if (byteValue == null) {
-          return null;
-        }
-        return new String(byteValue, REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.get(key);
       } finally {
         if (jedis != null) {
           try {
@@ -203,9 +186,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.setex(key.getBytes(REDIS_CHARSET), seconds, value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.setex(key, seconds, value);
       } finally {
         if (jedis != null) {
           try {
@@ -218,9 +199,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.setex(key.getBytes(REDIS_CHARSET), seconds, value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.setex(key, seconds, value);
       } finally {
         if (jedis != null) {
           try {
@@ -237,9 +216,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.del(key.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        return 0L;
+        return jedis.del(key);
       } finally {
         if (jedis != null) {
           try {
@@ -252,11 +229,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        byte[] bytesKey = key.getBytes(REDIS_CHARSET);
-        Jedis jedisA = jedis.getShard(bytesKey);
-        return jedisA.del(bytesKey);
-      } catch (IOException e) {
-        return 0L;
+        return jedis.del(key);
       } finally {
         if (jedis != null) {
           try {
@@ -273,9 +246,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.exists(key.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.exists(key);
       } finally {
         if (jedis != null) {
           try {
@@ -288,9 +259,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.exists(key.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.exists(key);
       } finally {
         if (jedis != null) {
           try {
@@ -309,13 +278,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        byte[] byteValue = jedis.hget(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET));
-        if (byteValue == null) {
-          return null;
-        }
-        return new String(byteValue, REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hget(hkey, field);
       } finally {
         if (jedis != null) {
           try {
@@ -328,13 +291,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        byte[] byteValue = jedis.hget(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET));
-        if (byteValue == null) {
-          return null;
-        }
-        return new String(byteValue, REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hget(hkey, field);
       } finally {
         if (jedis != null) {
           try {
@@ -351,9 +308,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hset(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET), value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hset(hkey, field, value);
       } finally {
         if (jedis != null) {
           try {
@@ -366,9 +321,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.hset(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET), value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hset(hkey, field, value);
       } finally {
         if (jedis != null) {
           try {
@@ -385,9 +338,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hdel(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hdel(hkey, field);
       } finally {
         if (jedis != null) {
           try {
@@ -400,9 +351,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.hdel(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hdel(hkey, field);
       } finally {
         if (jedis != null) {
           try {
@@ -414,14 +363,12 @@ public class RedisManager {
     }
   }
 
-  public java.util.Map<byte[], byte[]> hgetAll(String hkey) {
+  public java.util.Map<String, String> hgetAll(String hkey) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hgetAll(hkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hgetAll(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -434,9 +381,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.hgetAll(hkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hgetAll(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -454,17 +399,7 @@ public class RedisManager {
       try {
         jedis = _pool.getResource();
 
-        Map<byte[], byte[]> bhash = new HashMap<byte[], byte[]>(hash.size());
-        Map.Entry<String, String> entry;
-        Iterator<Map.Entry<String, String>> iterator = hash.entrySet().iterator();
-        while (iterator.hasNext()) {
-          entry = iterator.next();
-          bhash.put(entry.getKey().getBytes(REDIS_CHARSET), entry.getValue().getBytes(REDIS_CHARSET));
-        }
-
-        return jedis.hmset(hkey.getBytes(REDIS_CHARSET), bhash);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hmset(hkey, hash);
       } finally {
         if (jedis != null) {
           try {
@@ -478,17 +413,7 @@ public class RedisManager {
       try {
         jedis = _shardedPool.getResource();
 
-        Map<byte[], byte[]> bhash = new HashMap<byte[], byte[]>(hash.size());
-        Map.Entry<String, String> entry;
-        Iterator<Map.Entry<String, String>> iterator = hash.entrySet().iterator();
-        while (iterator.hasNext()) {
-          entry = iterator.next();
-          bhash.put(entry.getKey().getBytes(REDIS_CHARSET), entry.getValue().getBytes(REDIS_CHARSET));
-        }
-
-        return jedis.hmset(hkey.getBytes(REDIS_CHARSET), bhash);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hmset(hkey, hash);
       } finally {
         if (jedis != null) {
           try {
@@ -506,9 +431,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hlen(hkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hlen(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -521,9 +444,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.hlen(hkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hlen(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -535,14 +456,12 @@ public class RedisManager {
     }
   }
 
-  public java.util.Set<byte[]> hkeys(String hkey) {
+  public java.util.Set<String> hkeys(String hkey) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hkeys(hkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hkeys(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -555,11 +474,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        byte[] bytesKey = hkey.getBytes(REDIS_CHARSET);
-        Jedis jedisA = jedis.getShard(bytesKey);
-        return jedisA.hkeys(bytesKey);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hkeys(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -571,14 +486,12 @@ public class RedisManager {
     }
   }
 
-  public java.util.List<byte[]> hvals(String hkey) {
+  public java.util.List<String> hvals(String hkey) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hvals(hkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hvals(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -591,11 +504,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        byte[] bytesKey = hkey.getBytes(REDIS_CHARSET);
-        Jedis jedisA = jedis.getShard(bytesKey);
-        return jedisA.hvals(bytesKey);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hvals(hkey);
       } finally {
         if (jedis != null) {
           try {
@@ -612,9 +521,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.hexists(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hexists(hkey, field);
       } finally {
         if (jedis != null) {
           try {
@@ -627,9 +534,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.hexists(hkey.getBytes(REDIS_CHARSET), field.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.hexists(hkey, field);
       } finally {
         if (jedis != null) {
           try {
@@ -647,9 +552,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.lpush(lkey.getBytes(REDIS_CHARSET), value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lpush(lkey, value);
       } finally {
         if (jedis != null) {
           try {
@@ -662,9 +565,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.lpush(lkey.getBytes(REDIS_CHARSET), value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lpush(lkey, value);
       } finally {
         if (jedis != null) {
           try {
@@ -681,13 +582,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        byte[] byteValue = jedis.lpop(lkey.getBytes(REDIS_CHARSET));
-        if (byteValue == null) {
-          return null;
-        }
-        return new String(byteValue, REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lpop(lkey);
       } finally {
         if (jedis != null) {
           try {
@@ -700,57 +595,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        byte[] byteValue = jedis.lpop(lkey.getBytes(REDIS_CHARSET));
-        if (byteValue == null) {
-          return null;
-        }
-        return new String(byteValue, REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
-      } finally {
-        if (jedis != null) {
-          try {
-            _shardedPool.returnResource(jedis);
-          } catch (Throwable thex) {
-          }
-        }
-      }
-    }
-  }
-
-  public String blpop(int timeout, String lkey) {
-    if (_pool != null) {
-      Jedis jedis = null;
-      try {
-        jedis = _pool.getResource();
-        java.util.List<byte[]> list = jedis.blpop(timeout, lkey.getBytes(REDIS_CHARSET));
-        if (list == null) {
-          return null;
-        }
-        return new String(list.get(1), REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
-      } finally {
-        if (jedis != null) {
-          try {
-            _pool.returnResource(jedis);
-          } catch (Throwable thex) {
-          }
-        }
-      }
-    } else {
-      ShardedJedis jedis = null;
-      try {
-        jedis = _shardedPool.getResource();
-        byte[] bytesKey = lkey.getBytes(REDIS_CHARSET);
-        Jedis jedisA = jedis.getShard(bytesKey);
-        java.util.List<byte[]> list = jedisA.blpop(timeout, bytesKey);
-        if (list == null) {
-          return null;
-        }
-        return new String(list.get(1), REDIS_CHARSET);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lpop(lkey);
       } finally {
         if (jedis != null) {
           try {
@@ -767,9 +612,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.llen(lkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.llen(lkey);
       } finally {
         if (jedis != null) {
           try {
@@ -782,9 +625,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.llen(lkey.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.llen(lkey);
       } finally {
         if (jedis != null) {
           try {
@@ -796,14 +637,12 @@ public class RedisManager {
     }
   }
 
-  public java.util.List<byte[]> lrange(String lkey, int start, int end) {
+  public java.util.List<String> lrange(String lkey, int start, int end) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.lrange(lkey.getBytes(REDIS_CHARSET), start, end);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lrange(lkey, start, end);
       } finally {
         if (jedis != null) {
           try {
@@ -816,9 +655,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.lrange(lkey.getBytes(REDIS_CHARSET), start, end);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lrange(lkey, start, end);
       } finally {
         if (jedis != null) {
           try {
@@ -835,9 +672,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.lrem(lkey.getBytes(REDIS_CHARSET), count, value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lrem(lkey, count, value);
       } finally {
         if (jedis != null) {
           try {
@@ -850,9 +685,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.lrem(lkey.getBytes(REDIS_CHARSET), count, value.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.lrem(lkey, count, value);
       } finally {
         if (jedis != null) {
           try {
@@ -870,9 +703,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.sismember(skey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.sismember(skey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -885,9 +716,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.sismember(skey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.sismember(skey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -904,9 +733,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.sadd(skey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.sadd(skey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -919,9 +746,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.sadd(skey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.sadd(skey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -938,9 +763,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.srem(skey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.srem(skey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -953,9 +776,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.srem(skey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.srem(skey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -973,9 +794,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.zadd(zkey.getBytes(REDIS_CHARSET), score, member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zadd(zkey, score, member);
       } finally {
         if (jedis != null) {
           try {
@@ -988,9 +807,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.zadd(zkey.getBytes(REDIS_CHARSET), score, member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zadd(zkey, score, member);
       } finally {
         if (jedis != null) {
           try {
@@ -1007,9 +824,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.zrem(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zrem(zkey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -1022,9 +837,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.zrem(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zrem(zkey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -1041,9 +854,7 @@ public class RedisManager {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.zscore(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zscore(zkey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -1056,9 +867,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.zscore(zkey.getBytes(REDIS_CHARSET), member.getBytes(REDIS_CHARSET));
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zscore(zkey, member);
       } finally {
         if (jedis != null) {
           try {
@@ -1070,14 +879,12 @@ public class RedisManager {
     }
   }
 
-  public java.util.Set<byte[]> zrange(String zkey, int start, int end) {
+  public java.util.Set<String> zrange(String zkey, int start, int end) {
     if (_pool != null) {
       Jedis jedis = null;
       try {
         jedis = _pool.getResource();
-        return jedis.zrange(zkey.getBytes(REDIS_CHARSET), start, end);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zrange(zkey, start, end);
       } finally {
         if (jedis != null) {
           try {
@@ -1090,9 +897,7 @@ public class RedisManager {
       ShardedJedis jedis = null;
       try {
         jedis = _shardedPool.getResource();
-        return jedis.zrange(zkey.getBytes(REDIS_CHARSET), start, end);
-      } catch (IOException e) {
-        throw new JedisConnectionException(e);
+        return jedis.zrange(zkey, start, end);
       } finally {
         if (jedis != null) {
           try {

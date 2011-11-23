@@ -106,23 +106,21 @@ public class SessionManager implements ConfigDefs {
     }
 
     //@wjw_add 在查找本地没有,而redis有的其他节点上的session
-    // @wjw_note 方法1->分批获取所有redis里的session
-    java.util.Set<byte[]> allSessions = null;
+    //分批获取所有redis里的session
+    java.util.Set<String> allSessionId = null;
     int start = 0;
-    String tempSessionId;
     Session tempSession;
     while (true) {
-      allSessions = redis.zrange(PUSHLET_ZSET_ALLSESSION, start, start + 99);
-      if (allSessions.size() == 0) {
+      allSessionId = redis.zrange(PUSHLET_ZSET_ALLSESSION, start, start + 99);
+      if (allSessionId.size() == 0) {
         break;
       }
 
-      start = start + allSessions.size();
-      for (byte[] bb : allSessions) {
+      start = start + allSessionId.size();
+      for (String oneSessionId : allSessionId) {
         try {
-          tempSessionId = new String(bb, RedisManager.REDIS_CHARSET);
-          if (sessions.containsKey(tempSessionId) == false) {
-            tempSession = Session.create(tempSessionId);
+          if (sessions.containsKey(oneSessionId) == false) {
+            tempSession = Session.create(oneSessionId);
             tempSession.getSubscriber().start();
 
             args[0] = tempSession;
@@ -133,27 +131,6 @@ public class SessionManager implements ConfigDefs {
         }
       }
     }
-
-    // @wjw_note 方法2->此获取所有redis里的session方法,太耗内存!
-    //    java.util.Set<byte[]> sessionsSet = redis.keys(Session.PUSHLET_SESSION_PREFIX + "*");
-    //    String tempSessionId;
-    //    Session tempSession;
-    //    for (byte[] bb : sessionsSet) {
-    //      try {
-    //        tempSessionId = new String(bb, redis.REDIS_CHARSET);
-    //        tempSessionId = tempSessionId.substring(Session.PUSHLET_SESSION_PREFIX.length());
-    //        if (sessions.containsKey(tempSessionId) == false) {
-    //          tempSession = Session.create(tempSessionId);
-    //          tempSession.getSubscriber().start();
-    //
-    //          args[0] = tempSession;
-    //          method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
-    //        }
-    //      } catch (Exception e) {
-    //        Log.warn("apply: method invoke: ", e);
-    //      }
-    //    }
-
   }
 
   /**
@@ -261,7 +238,7 @@ public class SessionManager implements ConfigDefs {
       stop();
     }
     timer = new Timer(false);
-    timer.schedule(new AgingTimerTask(), TIMER_INTERVAL_MILLIS, TIMER_INTERVAL_MILLIS);
+    timer.schedule(new AgingTimerTask(), TIMER_INTERVAL_MILLIS, TIMER_INTERVAL_MILLIS);  //@wjw_note 固定间隔执行,如果每个节点都执行的话,是否会影响效率?
     info("started; interval=" + TIMER_INTERVAL_MILLIS + "ms");
   }
 
