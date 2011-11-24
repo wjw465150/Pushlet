@@ -157,8 +157,8 @@ public class PushletClient implements Protocol {
     event.setField(P_ID, id);
     Event response = doControl(event);
 
-    throwOnNack(response);
     id = null;
+    throwOnNack(response);
   }
 
   /**
@@ -370,7 +370,7 @@ public class PushletClient implements Protocol {
       // Note: somehow the client does not work with some JVMs when using
       // BufferedInputStream... So do unbuffered input.
       // p("Opening urlConnection inputstream");
-      return new InputStreamReader(urlConnection.getInputStream());
+      return new InputStreamReader(urlConnection.getInputStream(),"UTF-8");
 
     } catch (Throwable t) {
       warn("openURL() could not open " + aURL, t);

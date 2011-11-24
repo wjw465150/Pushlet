@@ -5,10 +5,19 @@ import internal.com.thoughtworks.xstream.io.xml.XppDriver;
 import internal.org.apache.commons.pool.impl.GenericObjectPool;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 import nl.justobjects.pushlet.core.Config;
 import nl.justobjects.pushlet.core.ConfigDefs;
 import nl.justobjects.pushlet.util.Log;
+
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.JsonNodeFactory;
+import org.codehaus.jackson.node.ObjectNode;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -19,7 +28,9 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class RedisManager {
   public static final String REDIS_CHARSET = "UTF-8";
-  static final XStream _xstream = new XStream(new XppDriver());
+  //static final XStream _xstream = new XStream(new XppDriver());
+  static final ObjectMapper _mapper = new ObjectMapper(); //@wjw_comment ObjectMapper是线程安全的
+
   static ShardedJedisPool _shardedPool = null;
   static JedisPool _pool = null;
 
@@ -35,9 +46,15 @@ public class RedisManager {
   private static RedisManager instance;
 
   static {
-    // Singleton + factory pattern:  create single instance
-    // from configured class name
     try {
+      //->初始化Json
+      _mapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
+
+      _mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+      _mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+      _mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+      //<-初始化Json
+
       instance = (RedisManager) Config.getClass(ConfigDefs.REDIS_MANAGER_CLASS, "nl.justobjects.pushlet.redis.RedisManager").newInstance();
       Log.info("RedisManager created className=" + instance.getClass());
       debug = Config.getBoolProperty(ConfigDefs.REDIS_DEBUG);
@@ -85,6 +102,7 @@ public class RedisManager {
       Log.info("RedisShards:" + shards.toString());
       Log.info("初始化RedisManager:" + instance.toString());
     } catch (Throwable t) {
+      t.printStackTrace();
       Log.fatal("Cannot instantiate RedisManager from config", t);
     }
   }
@@ -108,12 +126,38 @@ public class RedisManager {
         + maxConn + ",socketTO=" + socketTO + '}';
   }
 
-  public String toXML(Object obj) {
-    return _xstream.toXML(obj);
+  //  public String toXML(Object obj) {
+  //    return _xstream.toXML(obj);
+  //  }
+  //
+  //  public Object fromXML(String xml) {
+  //    return _xstream.fromXML(xml);
+  //  }
+
+  public JsonNode readTree(String content) {
+    try {
+      return _mapper.readTree(content);
+    } catch (IOException e) {
+      return new ObjectNode(JsonNodeFactory.instance);
+    }
   }
 
-  public Object fromXML(String xml) {
-    return _xstream.fromXML(xml);
+  public String objToJsonString(Object obj) {
+    try {
+      StringWriter writer = new StringWriter();
+      _mapper.writeValue(writer, obj);
+      return writer.toString();
+    } catch (Exception e) {
+      return "{}";
+    }
+  }
+
+  public <T> T jsonStringToObj(String content, Class<T> classType) {
+    try {
+      return _mapper.readValue(content, classType);
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   //TODO@redis的基本操作

@@ -126,7 +126,7 @@ public class Subscriber implements Protocol, ConfigDefs {
    */
   public Subscription addSubscription(String aSubject, String aLabel) throws PushletException {
     Subscription subscription = Subscription.create(aSubject, aLabel);
-    String strSubscription = redis.toXML(subscription);
+    String strSubscription = subscription.toJsonString();
     redis.hset(subscriptionHkey, aSubject, strSubscription);
 
     //把单个的subject存到redis的Hash表里,方便match查找
@@ -150,7 +150,11 @@ public class Subscriber implements Protocol, ConfigDefs {
     if (strSubscription == null) {
       subscription = null;
     } else {
-      subscription = (Subscription) redis.fromXML(strSubscription);
+      try {
+        subscription = Subscription.fromJsonString(strSubscription);
+      } catch (PushletException e) {
+        subscription = null;
+      }
       redis.hdel(subscriptionHkey, aSubscriptionId);
 
       String[] subjects = subscription.getSubjects();
@@ -177,11 +181,14 @@ public class Subscriber implements Protocol, ConfigDefs {
     Subscription subscription;
     java.util.List<String> subscriptions = redis.hvals(subscriptionHkey);
     for (String oneSubscription : subscriptions) {
-      subscription = (Subscription) redis.fromXML(oneSubscription);
-      String[] subjects = subscription.getSubjects();
-      for (String oneSubject : subjects) {
-        redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
-        redis.zrem(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, session.getId());
+      try {
+        subscription = Subscription.fromJsonString(oneSubscription);
+        String[] subjects = subscription.getSubjects();
+        for (String oneSubject : subjects) {
+          redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
+          redis.zrem(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, session.getId());
+        }
+      } catch (PushletException e) {
       }
     }
 
@@ -335,10 +342,13 @@ public class Subscriber implements Protocol, ConfigDefs {
       return null;
     }
 
-    Subscription subscription = (Subscription) redis.fromXML(strSubscription); //TODO@wjw_note 可以优化的地方
-
-    return subscription;
-
+    Subscription subscription;
+    try {
+      subscription = Subscription.fromJsonString(strSubscription);
+      return subscription;
+    } catch (PushletException e) {
+      return null;
+    }
   }
 
   /**

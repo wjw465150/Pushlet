@@ -3,7 +3,12 @@
 
 package nl.justobjects.pushlet.core;
 
+import nl.justobjects.pushlet.redis.RedisManager;
 import nl.justobjects.pushlet.util.PushletException;
+
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.JsonNodeFactory;
+import org.codehaus.jackson.node.ObjectNode;
 
 /**
  * Represents single subject subscription
@@ -12,6 +17,8 @@ import nl.justobjects.pushlet.util.PushletException;
  * @version $Id: Subscription.java,v 1.5 2007/11/23 14:33:07 justb Exp $
  */
 public class Subscription implements ConfigDefs {
+  static RedisManager redis = RedisManager.getInstance();
+
   public static final int ID_SIZE = 8;
   public static final String SUBJECT_SEPARATOR = ",";
 
@@ -89,4 +96,16 @@ public class Subscription implements ConfigDefs {
     return subjects;
   }
 
+  public String toJsonString() {
+    ObjectNode node = new ObjectNode(JsonNodeFactory.instance);
+    node.put("subject", subject);
+    node.put("label", label);
+
+    return node.toString();
+  }
+
+  public static Subscription fromJsonString(String content) throws PushletException {
+    JsonNode node = redis.readTree(content);
+    return create(node.get("subject").getTextValue(), node.get("label").getTextValue());
+  }
 }

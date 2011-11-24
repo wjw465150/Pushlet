@@ -18,7 +18,6 @@ import nl.justobjects.pushlet.util.Sys;
  * @version $Id: Event.java,v 1.13 2007/11/23 14:33:07 justb Exp $
  */
 public class Event implements Protocol, Serializable {
-
   protected Map attributes = new HashMap(3);
 
   public Event(String anEventType) {
@@ -150,4 +149,5 @@ public class Event implements Protocol, Serializable {
   private void setAttrs(Map theAttributes) {
     attributes.putAll(theAttributes);
   }
+
 }

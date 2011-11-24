@@ -3,6 +3,8 @@
 
 package nl.justobjects.pushlet.core;
 
+import java.util.Map;
+
 import nl.justobjects.pushlet.redis.RedisManager;
 
 /**
@@ -76,7 +78,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     }
 
     // Put item in queue
-    redis.lpush(myLkey, redis.toXML(item));
+    redis.lpush(myLkey, toJsonString(item));
 
     return true;
   }
@@ -139,7 +141,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
     String strEvent = null;
     java.util.List<Event> listEvent = new java.util.ArrayList<Event>(this.getSize());
     while ((strEvent = redis.lpop(myLkey)) != null) {
-      listEvent.add((Event) redis.fromXML(strEvent));
+      listEvent.add(fromJsonString(strEvent));
     }
     Event[] events = listEvent.toArray(new Event[0]);
 
@@ -169,12 +171,21 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
    * Circular counter.
    */
   private Event fetchNext() {
-    return (Event) redis.fromXML(redis.lpop(myLkey));
+    return fromJsonString(redis.lpop(myLkey));
   }
 
   //@wjw_add 清除保存在redis里的事件
   public void clear() {
     redis.del(myLkey);
+  }
+
+  public static String toJsonString(Event event) {
+    return redis.objToJsonString(event.attributes);
+  }
+
+  public static Event fromJsonString(String content) {
+    Map attributes = redis.jsonStringToObj(content, java.util.HashMap.class);
+    return new Event(attributes);
   }
 
 }
