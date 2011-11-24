@@ -4,15 +4,10 @@ import nl.justobjects.pushlet.core.Config;
 import nl.justobjects.pushlet.core.ConfigDefs;
 import nl.justobjects.pushlet.util.Log;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
-import com.mongodb.util.JSON;
 
 public class MongodbManager {
   protected static String serverlist = "127.0.0.1:27017"; //用逗号(,)分隔的"ip:port"列表

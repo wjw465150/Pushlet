@@ -23,7 +23,7 @@ public class Session implements Protocol, ConfigDefs {
   static MongodbManager mongo = MongodbManager.getInstance();
   static final DBCollection _coll = mongo._db.getCollection("session");
   static {
-    _coll.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.session', name: 'session_sessionId', unique: true}"));
+    _coll.ensureIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.session', name: 'session_sessionId', unique: true}"));
   }
   private DBObject findPK;
 
@@ -76,8 +76,9 @@ public class Session implements Protocol, ConfigDefs {
 
     if (session.isPersistence()) {
       session.readStatus();
+    } else {
+      session.saveStatus();
     }
-    session.saveStatus();
 
     return session;
   }

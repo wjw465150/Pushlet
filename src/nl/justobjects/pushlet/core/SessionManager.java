@@ -115,27 +115,38 @@ public class SessionManager implements ConfigDefs {
     DBObject dbSession;
     String tempSessionId;
     Session tempSession;
-    while (true) {
-      allSessions = Session._coll.find().skip(start).limit(100);
-      if (allSessions.size() == 0) {
-        break;
-      }
-
-      start = start + allSessions.size();
-      while (allSessions.hasNext()) {
-        try {
-          dbSession = allSessions.next();
-          tempSessionId = (String) dbSession.get("sessionId");
-          if (sessions.containsKey(tempSessionId) == false) {
-            tempSession = Session.create(tempSessionId);
-            tempSession.getSubscriber().start();
-
-            args[0] = tempSession;
-            method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
-          }
-        } catch (Exception e) {
-          Log.warn("apply: method invoke: ", e);
+    try {
+      while (true) {
+        if (allSessions != null) {
+          allSessions.close();
+          allSessions = null;
         }
+        allSessions = Session._coll.find().skip(start).limit(100);
+        if (allSessions.size() == 0) {
+          break;
+        }
+
+        start = start + allSessions.size();
+        while (allSessions.hasNext()) {
+          try {
+            dbSession = allSessions.next();
+            tempSessionId = (String) dbSession.get("sessionId");
+            if (sessions.containsKey(tempSessionId) == false) {
+              tempSession = Session.create(tempSessionId);
+              tempSession.getSubscriber().start();
+
+              args[0] = tempSession;
+              method.invoke(visitor, args); //TODO@ see Dispatcher.SessionManagerVisitor#visitMulticast
+            }
+          } catch (Exception e) {
+            Log.warn("apply: method invoke: ", e);
+          }
+        }
+      }
+    } finally {
+      if (allSessions != null) {
+        allSessions.close();
+        allSessions = null;
       }
     }
 

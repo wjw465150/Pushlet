@@ -3,16 +3,16 @@
 
 package nl.justobjects.pushlet.core;
 
+import nl.justobjects.pushlet.mongodb.MongodbManager;
+import nl.justobjects.pushlet.util.PushletException;
+import nl.justobjects.pushlet.util.Rand;
+import nl.justobjects.pushlet.util.Sys;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
-
-import nl.justobjects.pushlet.mongodb.MongodbManager;
-import nl.justobjects.pushlet.util.PushletException;
-import nl.justobjects.pushlet.util.Rand;
-import nl.justobjects.pushlet.util.Sys;
 
 /**
  * Handles data channel between dispatcher and client.
@@ -22,18 +22,15 @@ import nl.justobjects.pushlet.util.Sys;
  */
 public class Subscriber implements Protocol, ConfigDefs {
   static MongodbManager mongo = MongodbManager.getInstance();
-  private static final DBCollection _coll_SR = mongo._db.getCollection("subscriber");
-  private static final DBCollection _coll_SC = mongo._db.getCollection("subscription");
-  private static final DBCollection _coll_SJ = mongo._db.getCollection("subject");
+  static final DBCollection _coll_SR = mongo._db.getCollection("subscriber");
+  static final DBCollection _coll_SC = mongo._db.getCollection("subscription");
   static {
-    _coll_SR.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscriber', name: 'subscriber_sessionId', unique: true}"));
+    _coll_SR.ensureIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscriber', name: 'subscriber_sessionId', unique: true}"));
 
-    _coll_SC.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId', unique: false}"));
-    _coll_SC.createIndex((DBObject) JSON.parse("{'sessionId': 1, 'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId_subject', unique: true}"));
-
-    _coll_SJ.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subject', name: 'subject_sessionId', unique: false}"));
-    _coll_SJ.createIndex((DBObject) JSON.parse("{'sessionId': 1, 'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subject', name: 'subject_sessionId_subject', unique: true}"));
-    _coll_SJ.createIndex((DBObject) JSON.parse("{'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subject', name: 'subject_subject', unique: false}"));
+    _coll_SC.ensureIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId', unique: false}"));
+    _coll_SC.ensureIndex((DBObject) JSON.parse("{'subjects': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_subjects', unique: false}"));
+    _coll_SC.ensureIndex((DBObject) JSON.parse("{'sessionId': 1, 'subject': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId_subject', unique: true}"));
+    _coll_SC.ensureIndex((DBObject) JSON.parse("{'sessionId': 1, 'subjects': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.subscription', name: 'subscription_sessionId_subjects', unique: true}"));
   }
 
   private DBObject findPK;
@@ -96,8 +93,9 @@ public class Subscriber implements Protocol, ConfigDefs {
 
     if (subscriber.isPersistence()) {
       subscriber.readStatus();
+    } else {
+      subscriber.saveStatus();
     }
-    subscriber.saveStatus();
 
     return subscriber;
   }
@@ -146,15 +144,6 @@ public class Subscriber implements Protocol, ConfigDefs {
     _coll_SC.findAndModify((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '" + aSubject
         + "'}"), SessionManager.dbObj_ignore_id, null, false, subscription.toDBObject(session.getId()), true, true);
 
-    //把单个的subject存到subject表里,方便match查找
-    String[] subjects = subscription.getSubjects();
-    for (String oneSubject : subjects) {
-      DBObject dbSubject = BasicDBObjectBuilder.start().add("sessionId", session.getId()).add("subject", oneSubject).get();
-
-      _coll_SJ.findAndModify((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '" + oneSubject
-          + "'}"), SessionManager.dbObj_ignore_id, null, false, dbSubject, true, true);
-    }
-
     info("Subscription added subject=" + aSubject + " sid=" + subscription.getSubject() + " label=" + aLabel);
     return subscription;
   }
@@ -175,12 +164,6 @@ public class Subscriber implements Protocol, ConfigDefs {
       } catch (PushletException e) {
         subscription = null;
       }
-
-      String[] subjects = subscription.getSubjects();
-      for (String oneSubject : subjects) {
-        _coll_SJ.remove((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '" + oneSubject
-            + "'}"));
-      }
     }
 
     if (subscription == null) {
@@ -197,7 +180,6 @@ public class Subscriber implements Protocol, ConfigDefs {
    */
   public void removeSubscriptions() {
     _coll_SC.remove(findPK);
-    _coll_SJ.remove(findPK);
   }
 
   public String getMode() {
@@ -337,12 +319,6 @@ public class Subscriber implements Protocol, ConfigDefs {
    * Determine if we should receive event.
    */
   public Subscription match(Event event) {
-    DBObject dbSubject = _coll_SJ.findOne((DBObject) JSON.parse("{'sessionId': '" + session.getId() + "', 'subject': '"
-        + event.getSubject() + "'}"));
-    if (dbSubject == null) {
-      return null;
-    }
-
     Subscription subscription;
     try {
       DBObject dbSubscription = _coll_SC.findOne((DBObject) JSON.parse("{'sessionId': '" + session.getId()
@@ -453,7 +429,9 @@ public class Subscriber implements Protocol, ConfigDefs {
   }
 
   public void saveStatus() {
-    DBObject dbObj = BasicDBObjectBuilder.start().add("sessionId", session.getId()).add("mode", mode).get();
+    DBObject dbObj = BasicDBObjectBuilder.start()
+        .add("sessionId", session.getId())
+        .add("mode", mode).get();
 
     _coll_SR.findAndModify(findPK, SessionManager.dbObj_ignore_id, null, false, dbObj, true, true);
   }

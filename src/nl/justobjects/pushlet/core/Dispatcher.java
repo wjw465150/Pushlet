@@ -10,6 +10,10 @@ import java.util.Map;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
+
 /**
  * Routes Events to Subscribers.
  * 
@@ -68,17 +72,41 @@ public class Dispatcher implements Protocol, ConfigDefs {
    * Send event to subscribers matching Event subject.
    */
   public void multicast(Event anEvent) {
+    DBCursor allSubscriptions = null;
     try {
-      // Let the SessionManager loop through Sessions, calling
-      // our Visitor Method for each Session. This is done to guard
-      // synchronization with SessionManager and to optimize by
-      // not getting an array of all sessions.
-      Object[] args = new Object[2];
-      args[1] = anEvent; //TODO@ 此处args[0]留出来给SessionManager.getInstance().apply来填充为相关的session
-      Method method = sessionManagerVisitor.getMethod(SessionManagerVisitor.VISIT_MULTICAST);
-      SessionManager.getInstance().apply(sessionManagerVisitor, method, args);
+      DBObject dbSubscription;
+      String tempSessionId;
+      Session tempSession;
+      int start = 0;
+      while (true) {
+        if (allSubscriptions != null) {
+          allSubscriptions.close();
+          allSubscriptions = null;
+        }
+        allSubscriptions = Subscriber._coll_SC.find((DBObject) JSON.parse("{'subjects': '" + anEvent.getSubject() + "'}"))
+            .skip(start)
+            .limit(100);
+        if (allSubscriptions.size() == 0) {
+          break;
+        }
+
+        start = start + allSubscriptions.size();
+        while (allSubscriptions.hasNext()) {
+          dbSubscription = allSubscriptions.next();
+          tempSessionId = (String) dbSubscription.get("sessionId");
+          tempSession = Session.create(tempSessionId);
+          tempSession.getSubscriber().start();
+
+          sessionManagerVisitor.visitMulticast(tempSession, anEvent);
+        }
+      }
     } catch (Throwable t) {
-      Log.error("Error calling SessionManager.apply: ", t);
+      Log.error("Error calling Dispatcher.multicast: ", t);
+    } finally {
+      if (allSubscriptions != null) {
+        allSubscriptions.close();
+        allSubscriptions = null;
+      }
     }
   }
 

@@ -29,7 +29,7 @@ public class EventQueue { //@wjw_node 属于 Subscriber 的事件队列
   static MongodbManager mongo = MongodbManager.getInstance();
   private static final DBCollection _coll = mongo._db.getCollection("eventqueue");
   static {
-    _coll.createIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.eventqueue', name: 'eventqueue_sessionId', unique: false}"));
+    _coll.ensureIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.eventqueue', name: 'eventqueue_sessionId', unique: false}"));
   }
   private static final int SLEEP_TIME = 200;
   private DBObject findPK;
