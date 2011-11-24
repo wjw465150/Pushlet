@@ -85,7 +85,7 @@ var PL = {
 
 		// Optional subject to subscribe to
 		if (aSubject) {
-			query = query + '&p_subject=' + aSubject;
+			query = query + '&p_subject=' + encodeURIComponent(aSubject);
 		}
 
 		PL._doRequest('join-listen', query);
@@ -105,7 +105,7 @@ var PL = {
 
 		// Optional subject to subscribe to
 		if (aSubject) {
-			query = query + '&p_subject=' + aSubject;
+			query = query + '&p_subject=' + encodeURIComponent(aSubject);
 		}
 
 		PL._doRequest('listen', query);
@@ -114,7 +114,7 @@ var PL = {
 /** Publish to subject. */
 	publish: function(aSubject, theQueryArgs) {
 
-		var query = 'p_subject=' + aSubject;
+		var query = 'p_subject=' + encodeURIComponent(aSubject);
 		if (theQueryArgs) {
 			query = query + '&' + theQueryArgs;
 		}
@@ -125,9 +125,9 @@ var PL = {
 /** Subscribe to (comma separated) subject(s). */
 	subscribe: function(aSubject, aLabel) {
 
-		var query = 'p_subject=' + aSubject;
+		var query = 'p_subject=' + encodeURIComponent(aSubject);
 		if (aLabel) {
-			query = query + '&p_label=' + aLabel;
+			query = query + '&p_label=' + encodeURIComponent(aLabel);
 		}
 		PL._doRequest('subscribe', query);
 
@@ -139,7 +139,7 @@ var PL = {
 
 		// If no sid we unsubscribe from all subscriptions
 		if (aSubscriptionId) {
-			query = 'p_sid=' + aSubscriptionId;
+			query = 'p_sid=' + encodeURIComponent(aSubscriptionId);
 		}
 		PL._doRequest('unsubscribe', query);
 	},
@@ -220,7 +220,7 @@ var PL = {
 		// ASSERTION: PL.state is OK for this request
 
 		// Construct base URL for GET
-		var url = PL.pushletURL + '?p_event=' + anEvent;
+		var url = PL.pushletURL + '?p_event=' + encodeURIComponent(anEvent);
 
 		// Optionally attach query string
 		if (aQuery) {
@@ -229,7 +229,7 @@ var PL = {
 
 		// Optionally attach session id
 		if (PL.sessionId != null) {
-			url = url + '&p_id=' + PL.sessionId;
+			url = url + '&p_id=' + encodeURIComponent(PL.sessionId);
 			if (anEvent == 'p_leave') {
 				PL.sessionId = null;
 			}
@@ -681,7 +681,7 @@ function p_publish(aSubject, nvPairs) {
 		if (i > 1) {
 			amp = '&';
 		}
-		query = query + amp + args[i] + '=' + args[++i];
+		query = query + amp + args[i] + '=' + encodeURIComponent(args[++i]);
 	}
 	PL.publish(aSubject, query);
 }
