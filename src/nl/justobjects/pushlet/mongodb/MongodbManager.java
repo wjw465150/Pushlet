@@ -11,6 +11,7 @@ import com.mongodb.ServerAddress;
 
 public class MongodbManager {
   protected static String serverlist = "127.0.0.1:27017"; //用逗号(,)分隔的"ip:port"列表
+  public static int pagesize = 100;
   
   public static Mongo _mongo;
   public static DB _db;
@@ -34,6 +35,8 @@ public class MongodbManager {
         ServerAddress shardInfo = new ServerAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
         replicaSetSeeds.add(shardInfo);
       }
+      pagesize = Config.getIntProperty(ConfigDefs.MONGODB_PAGESIZE);
+      
       MongoOptions opt = new MongoOptions();
       opt.autoConnectRetry = Config.getBoolProperty(ConfigDefs.MONGODB_AUTOCONNECTRETRY);
       opt.connectionsPerHost = Config.getIntProperty(ConfigDefs.MONGODB_CONNECTIONSPERHOST);

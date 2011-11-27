@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import nl.justobjects.pushlet.mongodb.MongodbManager;
 import nl.justobjects.pushlet.util.Log;
 import nl.justobjects.pushlet.util.PushletException;
 
@@ -85,7 +86,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
         }
         allSubscriptions = Subscriber._coll_SC.find((DBObject) JSON.parse("{'subjects': '" + anEvent.getSubject() + "'}"))
             .skip(start)
-            .limit(100);
+            .limit(MongodbManager.pagesize);
         if (allSubscriptions.size() == 0) {
           break;
         }

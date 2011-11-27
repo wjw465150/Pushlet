@@ -18,6 +18,7 @@ import nl.justobjects.pushlet.util.PushletException;
 import nl.justobjects.pushlet.util.Rand;
 import nl.justobjects.pushlet.util.Sys;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -31,6 +32,7 @@ import com.mongodb.util.JSON;
 public class SessionManager implements ConfigDefs {
   static MongodbManager mongo = MongodbManager.getInstance();
   public static final DBObject dbObj_ignore_id = (DBObject) JSON.parse("{'_id': 0}");
+  public static final DBObject dbObj_AgingTime = (DBObject) JSON.parse("{'_id': 0, 'AgingTime': 1}");
 
   /**
    * Singleton pattern: single instance.
@@ -121,7 +123,7 @@ public class SessionManager implements ConfigDefs {
           allSessions.close();
           allSessions = null;
         }
-        allSessions = Session._coll.find().skip(start).limit(100);
+        allSessions = Session._coll.find().skip(start).limit(MongodbManager.pagesize);
         if (allSessions.size() == 0) {
           break;
         }
@@ -362,6 +364,21 @@ public class SessionManager implements ConfigDefs {
      * Callback from SessionManager during apply()
      */
     public void visit(Session aSession) {
+      //@wjw_add: 先判断此session是否正在被其他节点的AgingTimerTask访问
+      try {
+        BasicDBObject dbSession = (BasicDBObject) Session._coll.findOne(aSession.findPK, SessionManager.dbObj_AgingTime);
+        if (dbSession == null) {
+          return;
+        }
+
+        long agingTime = dbSession.getLong("AgingTime");
+        if ((System.currentTimeMillis() - agingTime) < 60000) { //假设agingTime小于60秒说明还正在被其他节点的AgingTimerTask访问
+          return;
+        }
+      } catch (Exception e) {
+        Session._coll.update(aSession.findPK, (DBObject) JSON.parse("{$set: {'AgingTime': " + System.currentTimeMillis() + "} }"), true, false);
+      }
+
       try {
         // Age the lease
         aSession.age(delta);
@@ -377,6 +394,8 @@ public class SessionManager implements ConfigDefs {
         }
       } catch (Throwable t) {
         warn("AgingTimerTask: Error in timer task : " + t);
+      } finally {
+        Session._coll.update(aSession.findPK, (DBObject) JSON.parse("{$set: {'AgingTime': " + 0 + "} }"), true, false);
       }
     }
   }

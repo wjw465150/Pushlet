@@ -25,7 +25,7 @@ public class Session implements Protocol, ConfigDefs {
   static {
     _coll.ensureIndex((DBObject) JSON.parse("{'sessionId': 1}"), (DBObject) JSON.parse("{ns: 'pushlet.session', name: 'session_sessionId', unique: true}"));
   }
-  private DBObject findPK;
+  DBObject findPK;
 
   private Controller controller;
   private Subscriber subscriber;

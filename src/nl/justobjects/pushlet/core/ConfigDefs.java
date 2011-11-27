@@ -79,5 +79,6 @@ public interface ConfigDefs {
   public static final String MONGODB_W = "mongodb.w";
   public static final String MONGODB_WTIMEOUT = "mongodb.wtimeout";
   public static final String MONGODB_FSYNC = "mongodb.fsync";
+  public static final String MONGODB_PAGESIZE = "mongodb.pagesize";
 
 }
