@@ -111,7 +111,7 @@ public class SessionManager implements ConfigDefs {
     int start = 0;
     Session tempSession;
     while (true) {
-      allSessionId = redis.zrange(PUSHLET_ZSET_ALLSESSION, start, start + 99);
+      allSessionId = redis.zrange(PUSHLET_ZSET_ALLSESSION, start, start + RedisManager.pagesize);
       if (allSessionId.size() == 0) {
         break;
       }
@@ -238,7 +238,7 @@ public class SessionManager implements ConfigDefs {
       stop();
     }
     timer = new Timer(false);
-    timer.schedule(new AgingTimerTask(), TIMER_INTERVAL_MILLIS, TIMER_INTERVAL_MILLIS);  //@wjw_note 固定间隔执行,如果每个节点都执行的话,是否会影响效率?
+    timer.schedule(new AgingTimerTask(), TIMER_INTERVAL_MILLIS, TIMER_INTERVAL_MILLIS); //@wjw_note 固定间隔执行,如果每个节点都执行的话,是否会影响效率?
     info("started; interval=" + TIMER_INTERVAL_MILLIS + "ms");
   }
 
@@ -342,6 +342,19 @@ public class SessionManager implements ConfigDefs {
      * Callback from SessionManager during apply()
      */
     public void visit(Session aSession) {
+      //@wjw_add: 先判断此session是否正在被其他节点的AgingTimerTask访问
+      if (redis.hsetnx(Session.PUSHLET_SESSION_PREFIX + aSession.getId(), "AgingTime", String.valueOf(System.currentTimeMillis())) == 0) { //键"AgingTime"已经存在
+        try {
+          String strAgingTime = redis.hget(Session.PUSHLET_SESSION_PREFIX + aSession.getId(), "AgingTime");
+          long agingTime = Long.parseLong(strAgingTime);
+          if ((System.currentTimeMillis() - agingTime) < 60000) { //假设agingTime小于60秒说明还正在被其他节点的AgingTimerTask访问
+            return;
+          }
+        } catch (Exception e) {
+          redis.hset(Session.PUSHLET_SESSION_PREFIX + aSession.getId(), "AgingTime", String.valueOf(System.currentTimeMillis()));
+        }
+      }
+
       try {
         // Age the lease
         aSession.age(delta);
@@ -357,6 +370,8 @@ public class SessionManager implements ConfigDefs {
         }
       } catch (Throwable t) {
         warn("AgingTimerTask: Error in timer task : " + t);
+      } finally {
+        redis.hdel(Session.PUSHLET_SESSION_PREFIX + aSession.getId(), "AgingTime");
       }
     }
   }

@@ -1,11 +1,8 @@
 package nl.justobjects.pushlet.redis;
 
-import internal.com.thoughtworks.xstream.XStream;
-import internal.com.thoughtworks.xstream.io.xml.XppDriver;
 import internal.org.apache.commons.pool.impl.GenericObjectPool;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
 import nl.justobjects.pushlet.core.Config;
 import nl.justobjects.pushlet.core.ConfigDefs;
@@ -39,6 +36,7 @@ public class RedisManager {
   static protected int minConn = 5;
   static protected int maxConn = 100;
   static protected int socketTO = 6000;
+  public static int pagesize = 100;
 
   /**
    * Singleton pattern: single instance.
@@ -62,6 +60,7 @@ public class RedisManager {
       minConn = Config.getIntProperty(ConfigDefs.REDIS_MINCONN);
       maxConn = Config.getIntProperty(ConfigDefs.REDIS_MAXCONN);
       socketTO = Config.getIntProperty(ConfigDefs.REDIS_SOCKETTO);
+      pagesize = Config.getIntProperty(ConfigDefs.REDIS_PAGESIZE) - 1;
 
       JedisPoolConfig poolConfig = new JedisPoolConfig();
       poolConfig.setMaxActive(maxConn);
@@ -144,9 +143,7 @@ public class RedisManager {
 
   public String objToJsonString(Object obj) {
     try {
-      StringWriter writer = new StringWriter();
-      _mapper.writeValue(writer, obj);
-      return writer.toString();
+      return _mapper.writeValueAsString(obj);
     } catch (Exception e) {
       return "{}";
     }
@@ -366,6 +363,36 @@ public class RedisManager {
       try {
         jedis = _shardedPool.getResource();
         return jedis.hset(hkey, field, value);
+      } finally {
+        if (jedis != null) {
+          try {
+            _shardedPool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    }
+  }
+
+  public Long hsetnx(String hkey, String field, String value) {
+    if (_pool != null) {
+      Jedis jedis = null;
+      try {
+        jedis = _pool.getResource();
+        return jedis.hsetnx(hkey, field, value);
+      } finally {
+        if (jedis != null) {
+          try {
+            _pool.returnResource(jedis);
+          } catch (Throwable thex) {
+          }
+        }
+      }
+    } else {
+      ShardedJedis jedis = null;
+      try {
+        jedis = _shardedPool.getResource();
+        return jedis.hsetnx(hkey, field, value);
       } finally {
         if (jedis != null) {
           try {

@@ -71,6 +71,7 @@ public interface ConfigDefs {
   public static final String REDIS_MINCONN = "redis.minconn";
   public static final String REDIS_MAXCONN = "redis.maxconn";
   public static final String REDIS_SOCKETTO = "redis.socketto";
+  public static final String REDIS_PAGESIZE = "redis.pagesize";
 }
 
 /*

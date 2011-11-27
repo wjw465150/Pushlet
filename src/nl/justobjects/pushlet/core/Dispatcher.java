@@ -76,7 +76,7 @@ public class Dispatcher implements Protocol, ConfigDefs {
     int start = 0;
     Session tempSession;
     while (true) {
-      allSessionId = redis.zrange(Subscriber.PUSHLET_ZSET_SUBJECT_PREFIX + anEvent.getSubject(), start, start + 99);
+      allSessionId = redis.zrange(Subscriber.PUSHLET_ZSET_SUBJECT_PREFIX + anEvent.getSubject(), start, start + RedisManager.pagesize);
       if (allSessionId.size() == 0) {
         break;
       }
