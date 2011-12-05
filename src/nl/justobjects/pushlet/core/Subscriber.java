@@ -127,16 +127,16 @@ public class Subscriber implements Protocol, ConfigDefs {
   public Subscription addSubscription(String aSubject, String aLabel) throws PushletException {
     Subscription subscription = Subscription.create(aSubject, aLabel);
     String strSubscription = subscription.toJsonString();
-    redis.hset(subscriptionHkey, aSubject, strSubscription);
+    if (redis.hset(subscriptionHkey, aSubject, strSubscription) == 1) {
+      //把单个的subject存到redis的Hash表里,方便match查找
+      String[] subjects = subscription.getSubjects();
+      for (String oneSubject : subjects) {
+        redis.hset(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId(), aSubject);
+        redis.zadd(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, System.currentTimeMillis(), session.getId());
+      }
 
-    //把单个的subject存到redis的Hash表里,方便match查找
-    String[] subjects = subscription.getSubjects();
-    for (String oneSubject : subjects) {
-      redis.hset(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId(), aSubject);
-      redis.zadd(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, System.currentTimeMillis(), session.getId());
+      info("Subscription added subject=" + aSubject + " sid=" + aSubject + " label=" + aLabel);
     }
-
-    info("Subscription added subject=" + aSubject + " sid=" + aSubject + " label=" + aLabel);
     return subscription;
   }
 
@@ -150,17 +150,17 @@ public class Subscriber implements Protocol, ConfigDefs {
     if (strSubscription == null) {
       subscription = null;
     } else {
+      redis.hdel(subscriptionHkey, aSubscriptionId);
       try {
         subscription = Subscription.fromJsonString(strSubscription);
+
+        String[] subjects = subscription.getSubjects();
+        for (String oneSubject : subjects) {
+          redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
+          redis.zrem(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, session.getId());
+        }
       } catch (PushletException e) {
         subscription = null;
-      }
-      redis.hdel(subscriptionHkey, aSubscriptionId);
-
-      String[] subjects = subscription.getSubjects();
-      for (String oneSubject : subjects) {
-        redis.hdel(PUSHLET_SUBJECT_PREFIX + oneSubject, session.getId());
-        redis.zrem(PUSHLET_ZSET_SUBJECT_PREFIX + oneSubject, session.getId());
       }
     }
 
