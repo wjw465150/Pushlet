@@ -28,11 +28,12 @@
 
 	function joinListen() {
 		PL.state = PL.STATE_READY;
-	  p_join_listen('/pushlet/chatx');
+	  PL.joinListen('/pushlet/chatx');
 	}
 
 	function publish() {
-		p_publish('/pushlet/chatx','msg','sssdd王俊伟');
+		//p_publish('/pushlet/chatx','msg','sssdd王俊伟');
+		PL.publishJson('/pushlet/chatx',{'msg': 'sssdd王俊伟'});
 	}
 
 	function leave() {
