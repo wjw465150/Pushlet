@@ -85,7 +85,6 @@ abstract public class EventPullSource implements EventSource, Runnable {
     alive = true;
     while (alive) {
       try {
-
         Thread.sleep(getSleepTime());
 
         // Stopped during sleep: end loop.
@@ -110,6 +109,9 @@ abstract public class EventPullSource implements EventSource, Runnable {
       try {
         // Derived class should produce an event.
         Event event = pullEvent();
+        if (null == event) {  //@wjw_add 判断当event为空时是没有合适的消息,不予处理
+          continue;
+        }
 
         // Let the publisher push it to subscribers.
         Dispatcher.getInstance().multicast(event); //TODO@ 把event广播出去
