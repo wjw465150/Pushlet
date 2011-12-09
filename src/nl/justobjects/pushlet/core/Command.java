@@ -101,7 +101,12 @@ public class Command implements Protocol {
     String outputFormat = session.getFormat();
 
     // Determine client adapter to create.
-    if (outputFormat.equals(FORMAT_JAVASCRIPT)) {
+    if (outputFormat.equals(FORMAT_JSON)) {
+      return new JsonAdapter(httpRsp);
+    } else if (outputFormat.equals(FORMAT_XML_STRICT)) {
+      // Client expects to receive Events embedded in single XML doc.
+      return new XMLAdapter(httpRsp, true);
+    } else if (outputFormat.equals(FORMAT_JAVASCRIPT)) {
       // Client expects to receive Events as JavaScript dispatch calls..
       return new BrowserAdapter(httpRsp);
     } else if (outputFormat.equals(FORMAT_SERIALIZED_JAVA_OBJECT)) {
@@ -110,9 +115,6 @@ public class Command implements Protocol {
     } else if (outputFormat.equals(FORMAT_XML)) {
       // Client expects to receive Events as stream of XML docs.
       return new XMLAdapter(httpRsp);
-    } else if (outputFormat.equals(FORMAT_XML_STRICT)) {
-      // Client expects to receive Events embedded in single XML doc.
-      return new XMLAdapter(httpRsp, true);
     } else {
       throw new PushletException("Null or invalid output format: " + outputFormat);
     }

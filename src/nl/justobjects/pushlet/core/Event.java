@@ -138,6 +138,27 @@ public class Event implements Protocol, Serializable {
     return toXML(false);
   }
 
+  @SuppressWarnings("unchecked")
+  public String toJson() {
+    StringBuilder jsonString = new StringBuilder("{ ");
+    String nextAttrName;
+    String nextAttrValue;
+    boolean firstLoop = true;
+    for (Iterator<String> iter = getFieldNames(); iter.hasNext();) {
+      nextAttrName = iter.next();
+      nextAttrValue = getField(nextAttrName);
+      if (firstLoop) {
+        firstLoop = false;
+      } else {
+        jsonString.append(",");
+      }
+      jsonString.append(Sys.quote(nextAttrName) + ": " + Sys.quote(nextAttrValue) + " ");
+    }
+
+    jsonString.append(" }");
+    return jsonString.toString();
+  }
+
   public Object clone() {
     // Clone the Event by using copy constructor
     return new Event(attributes);

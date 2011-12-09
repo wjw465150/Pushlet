@@ -228,6 +228,11 @@ public interface Protocol {
    */
   public static String FORMAT_XML_STRICT = "xml-strict";
 
+  /**
+   * Json Array containing zero or more events.
+   */
+  public static String FORMAT_JSON = "json";
+
   //
   // Values for P_MODE parameter
   //
