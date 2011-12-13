@@ -195,7 +195,7 @@ public class SessionManager implements ConfigDefs {
    */
   public String getStatus() {
     Session[] sessions = getSessions();
-    StringBuffer statusBuffer = new StringBuffer();
+    StringBuilder statusBuffer = new StringBuilder();
     statusBuffer.append("SessionMgr: " + sessions.length + " sessions \\n");
     for (int i = 0; i < sessions.length; i++) {
       statusBuffer.append(sessions[i] + "\\n");

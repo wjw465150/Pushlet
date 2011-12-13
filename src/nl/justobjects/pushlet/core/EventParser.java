@@ -33,7 +33,7 @@ public class EventParser {
    * Parse Event from input Reader.
    */
   public static Event parse(Reader aReader) throws IOException {
-    StringBuffer preparsedString = new StringBuffer(24);
+    StringBuilder preparsedString = new StringBuilder(24);
 
     // First find the opening tag ('<')
     char nextChar;

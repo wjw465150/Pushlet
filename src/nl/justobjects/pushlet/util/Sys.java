@@ -42,7 +42,7 @@ public class Sys {
    * automatically.)
    */
   static public String forHTMLTag(String aTagFragment) {
-    final StringBuffer result = new StringBuffer();
+    final StringBuilder result = new StringBuilder();
 
     final StringCharacterIterator iterator = new StringCharacterIterator(aTagFragment);
     char character = iterator.current();

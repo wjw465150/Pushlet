@@ -102,7 +102,7 @@ public class Rand {
   }
 
   public static String randomName(int aLength) {
-    StringBuffer sb = new StringBuffer(aLength);
+    StringBuilder sb = new StringBuilder(aLength);
     for (int i = 0; i < aLength; i++) {
       sb.append(i % 2 == 0 ? randomNonVowel() : randomVowel());
     }
@@ -118,7 +118,7 @@ public class Rand {
   }
 
   public static String randomString(int aLength) {
-    StringBuffer sb = new StringBuffer(aLength);
+    StringBuilder sb = new StringBuilder(aLength);
     for (int i = 0; i < aLength; i++) {
       sb.append(randomChar());
     }
