@@ -423,7 +423,7 @@ var PL = {
 			};
 		}
 
-		PL.pushletURL = PL._getWebRoot() + 'pushlet.srv';
+		PL.pushletURL = 'pushlet.srv';
 		PL._setStatus('initialized');
 		PL.state = PL.STATE_READY;
 	},
@@ -814,7 +814,7 @@ function p_publish(aSubject, nvPairs) {
 	PL.publish(aSubject, query);
 }
 
-// Publish to a subject 给在线用户
+// Publish to a subject 给在线用户.
 function p_publish_to_online(aSubject, nvPairs) {
   var args = p_publish.arguments;
 
