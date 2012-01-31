@@ -1,1 +1,15 @@
-Pushlet是通过改进http://www.pushlets.com/一个开源的Comet 框架,添加支持多字符集和通过redis做后端数据库来做集群.Pushlet 使用了观察者模型：客户端发送请求，订阅感兴趣的事件；服务器端为每个客户端分配一个会话 ID 作为标记，事件源会把新产生的事件以多播的方式发送到订阅者的事件队列里。
+Pushlet是通过改进http://www.pushlets.com/一个开源的Comet 框架,添加支持多字符集和通过redis做后端数据库来做集群.
+Pushlet 使用了观察者模型：客户端发送请求，订阅感兴趣的事件；服务器端为每个客户端分配一个会话 ID 作为标记，
+事件源会把新产生的事件以多播的方式发送到订阅者的事件队列里。
+
+Redis分支的数据模型:
+ZSET:
+  "p:zset:as" //存放所有的session;score是一个时间戳,value是sessionid
+  "p:zset:sj:"+oneSubject //score是一个时间戳,value是sessionid;目的是能从一个oneSubject里获取到所有的session.
+HASH:
+  "p:sr:"+sessionid  //field是Subscriber对象的属性名, value是Subscriber对象的属性值
+  "p:sc:"+sessionid  //field是Subscription对象的Subject属性, value是Subscription对象
+  "p:sj:"+oneSubject  //field是sessionid, value是Subscription对象的Subject属性;目的是能快速匹配到一个Subscription对象
+  "p:ss:"+sessionid  //field是Session对象的属性名, value是Session对象的属性值
+LIST:
+  "p:eq:"+sessionid  //存放Event对象
