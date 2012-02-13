@@ -15,13 +15,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.ShardedJedis;
-import redis.clients.jedis.ShardedJedisPool;
-import redis.clients.jedis.exceptions.JedisConnectionException;
+import internal.redis.clients.jedis.Jedis;
+import internal.redis.clients.jedis.JedisPool;
+import internal.redis.clients.jedis.JedisPoolConfig;
+import internal.redis.clients.jedis.JedisShardInfo;
+import internal.redis.clients.jedis.ShardedJedis;
+import internal.redis.clients.jedis.ShardedJedisPool;
+import internal.redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class RedisManager {
   public static final String REDIS_CHARSET = "UTF-8";
