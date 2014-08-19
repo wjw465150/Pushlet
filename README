@@ -1,15 +1,15 @@
-PushletÊÇÍ¨¹ı¸Ä½øhttp://www.pushlets.com/Ò»¸ö¿ªÔ´µÄComet ¿ò¼Ü,Ìí¼ÓÖ§³Ö¶à×Ö·û¼¯ºÍÍ¨¹ıredis×öºó¶ËÊı¾İ¿âÀ´×ö¼¯Èº.
-Pushlet Ê¹ÓÃÁË¹Û²ìÕßÄ£ĞÍ£º¿Í»§¶Ë·¢ËÍÇëÇó£¬¶©ÔÄ¸ĞĞËÈ¤µÄÊÂ¼ş£»·şÎñÆ÷¶ËÎªÃ¿¸ö¿Í»§¶Ë·ÖÅäÒ»¸ö»á»° ID ×÷Îª±ê¼Ç£¬
-ÊÂ¼şÔ´»á°ÑĞÂ²úÉúµÄÊÂ¼şÒÔ¶à²¥µÄ·½Ê½·¢ËÍµ½¶©ÔÄÕßµÄÊÂ¼ş¶ÓÁĞÀï¡£
+Pushletæ˜¯é€šè¿‡æ”¹è¿›[http://www.pushlets.com/](http://www.pushlets.com/)ä¸€ä¸ªå¼€æºçš„Cometæ¡†æ¶,æ·»åŠ æ”¯æŒå¤šå­—ç¬¦é›†å’Œé€šè¿‡redisåšåç«¯æ•°æ®åº“æ¥åšé›†ç¾¤.
+Pushlet ä½¿ç”¨äº†è§‚å¯Ÿè€…æ¨¡å‹ï¼šå®¢æˆ·ç«¯å‘é€è¯·æ±‚ï¼Œè®¢é˜…æ„Ÿå…´è¶£çš„äº‹ä»¶ï¼›æœåŠ¡å™¨ç«¯ä¸ºæ¯ä¸ªå®¢æˆ·ç«¯åˆ†é…ä¸€ä¸ªä¼šè¯ ID ä½œä¸ºæ ‡è®°ï¼Œ
+äº‹ä»¶æºä¼šæŠŠæ–°äº§ç”Ÿçš„äº‹ä»¶ä»¥å¤šæ’­çš„æ–¹å¼å‘é€åˆ°è®¢é˜…è€…çš„äº‹ä»¶é˜Ÿåˆ—é‡Œã€‚
 
-Redis·ÖÖ§µÄÊı¾İÄ£ĞÍ:
+Redisåˆ†æ”¯çš„æ•°æ®æ¨¡å‹:
 ZSET:
-  "p:zset:as" //´æ·ÅËùÓĞµÄsession;scoreÊÇÒ»¸öÊ±¼ä´Á,valueÊÇsessionid
-  "p:zset:sj:"+oneSubject //scoreÊÇÒ»¸öÊ±¼ä´Á,valueÊÇsessionid;Ä¿µÄÊÇÄÜ´ÓÒ»¸öoneSubjectÀï»ñÈ¡µ½ËùÓĞµÄsession.
+  "p:zset:as" //å­˜æ”¾æ‰€æœ‰çš„session;scoreæ˜¯ä¸€ä¸ªæ—¶é—´æˆ³,valueæ˜¯sessionid
+  "p:zset:sj:"+oneSubject //scoreæ˜¯ä¸€ä¸ªæ—¶é—´æˆ³,valueæ˜¯sessionid;ç›®çš„æ˜¯èƒ½ä»ä¸€ä¸ªoneSubjecté‡Œè·å–åˆ°æ‰€æœ‰çš„session.
 HASH:
-  "p:sr:"+sessionid  //fieldÊÇSubscriber¶ÔÏóµÄÊôĞÔÃû, valueÊÇSubscriber¶ÔÏóµÄÊôĞÔÖµ
-  "p:sc:"+sessionid  //fieldÊÇSubscription¶ÔÏóµÄSubjectÊôĞÔ, valueÊÇSubscription¶ÔÏó
-  "p:sj:"+oneSubject  //fieldÊÇsessionid, valueÊÇSubscription¶ÔÏóµÄSubjectÊôĞÔ;Ä¿µÄÊÇÄÜ¿ìËÙÆ¥Åäµ½Ò»¸öSubscription¶ÔÏó
-  "p:ss:"+sessionid  //fieldÊÇSession¶ÔÏóµÄÊôĞÔÃû, valueÊÇSession¶ÔÏóµÄÊôĞÔÖµ
+  "p:sr:"+sessionid  //fieldæ˜¯Subscriberå¯¹è±¡çš„å±æ€§å, valueæ˜¯Subscriberå¯¹è±¡çš„å±æ€§å€¼
+  "p:sc:"+sessionid  //fieldæ˜¯Subscriptionå¯¹è±¡çš„Subjectå±æ€§, valueæ˜¯Subscriptionå¯¹è±¡
+  "p:sj:"+oneSubject  //fieldæ˜¯sessionid, valueæ˜¯Subscriptionå¯¹è±¡çš„Subjectå±æ€§;ç›®çš„æ˜¯èƒ½å¿«é€ŸåŒ¹é…åˆ°ä¸€ä¸ªSubscriptionå¯¹è±¡
+  "p:ss:"+sessionid  //fieldæ˜¯Sessionå¯¹è±¡çš„å±æ€§å, valueæ˜¯Sessionå¯¹è±¡çš„å±æ€§å€¼
 LIST:
-  "p:eq:"+sessionid  //´æ·ÅEvent¶ÔÏó
+  "p:eq:"+sessionid  //å­˜æ”¾Eventå¯¹è±¡
